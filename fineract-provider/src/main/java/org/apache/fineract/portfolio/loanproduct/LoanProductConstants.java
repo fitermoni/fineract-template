@@ -99,6 +99,11 @@ public interface LoanProductConstants {
     String recalculationCompoundingFrequencyOnDayParamName = "recalculationCompoundingFrequencyOnDayType";
     String isCompoundingToBePostedAsTransactionParamName = "isCompoundingToBePostedAsTransaction";
 
+    String advancePaymentInterestForExactDaysInPeriodParamName = "advancePaymentInterestForExactDaysInPeriod";
+    String isBnplLoanProductParamName = "isBnplLoanProduct";
+    String requiresEquityContributionParamName = "requiresEquityContribution";
+    String equityContributionLoanPercentageParamName = "equityContributionLoanPercentage";
+
     // Guarantee related
     String holdGuaranteeFundsParamName = "holdGuaranteeFunds";
     String mandatoryGuaranteeParamName = "mandatoryGuarantee";

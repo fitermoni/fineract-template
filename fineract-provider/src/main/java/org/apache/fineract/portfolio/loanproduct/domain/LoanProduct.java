@@ -58,6 +58,7 @@ import org.apache.fineract.portfolio.floatingrates.data.FloatingRateDTO;
 import org.apache.fineract.portfolio.floatingrates.data.FloatingRatePeriodData;
 import org.apache.fineract.portfolio.floatingrates.domain.FloatingRate;
 import org.apache.fineract.portfolio.fund.domain.Fund;
+import org.apache.fineract.portfolio.interestratechart.domain.InterestRateChart;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.AprCalculator;
 import org.apache.fineract.portfolio.loanproduct.LoanProductConstants;
 import org.apache.fineract.portfolio.loanproduct.exception.LoanProductGeneralRuleException;
@@ -203,6 +204,19 @@ public class LoanProduct extends AbstractPersistableCustom {
     @Column(name = "is_account_level_arrears_tolerance_enable", nullable = false)
     private boolean isAccountLevelArrearsToleranceEnable;
 
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinTable(name = "m_product_loan_interest_rate_chart", joinColumns = @JoinColumn(name = "loan_product_id"), inverseJoinColumns = @JoinColumn(name = "interest_rate_chart_id", unique = true))
+    protected Set<InterestRateChart> charts;
+
+    @Column(name = "is_bnpl_loan_product")
+    private Boolean isBnplLoanProduct;
+
+    @Column(name = "requires_equity_contribution")
+    private Boolean requiresEquityContribution;
+
+    @Column(name = "equity_contribution_loan_percentage", scale = 6, precision = 19)
+    private BigDecimal equityContributionLoanPercentage;
+
     public static LoanProduct assembleFromJson(final Fund fund, final LoanTransactionProcessingStrategy loanTransactionProcessingStrategy,
             final List<Charge> productCharges, final JsonCommand command, final AprCalculator aprCalculator, FloatingRate floatingRate,
             final List<Rate> productRates) {
@@ -288,6 +302,9 @@ public class LoanProduct extends AbstractPersistableCustom {
         final LocalDate startDate = command.localDateValueOfParameterNamed("startDate");
         final LocalDate closeDate = command.localDateValueOfParameterNamed("closeDate");
         final String externalId = command.stringValueOfParameterNamedAllowingNull("externalId");
+
+        final boolean advancePaymentInterestForExactDaysInPeriod = command
+                .booleanPrimitiveValueOfParameterNamed("advancePaymentInterestForExactDaysInPeriod");
 
         final boolean useBorrowerCycle = command
                 .booleanPrimitiveValueOfParameterNamed(LoanProductConstants.USE_BORROWER_CYCLE_PARAMETER_NAME);
@@ -384,6 +401,12 @@ public class LoanProduct extends AbstractPersistableCustom {
         final boolean isAccountLevelArrearsToleranceEnable = command
                 .booleanPrimitiveValueOfParameterNamed(LoanProductConstants.IS_ACCOUNT_LEVEL_ARREARS_TOLERANCE_ENABLE);
 
+        final Boolean isBnplLoanProduct = command
+                .booleanObjectValueOfParameterNamed(LoanProductConstants.isBnplLoanProductParamName);
+        final Boolean requiresEquityContribution = command
+                .booleanObjectValueOfParameterNamed(LoanProductConstants.requiresEquityContributionParamName);
+        final BigDecimal equityContributionLoanPercentage = command.bigDecimalValueOfParameterNamed(LoanProductConstants.equityContributionLoanPercentageParamName);
+
         return new LoanProduct(fund, loanTransactionProcessingStrategy, name, shortName, description, currency, principal, minPrincipal,
                 maxPrincipal, interestRatePerPeriod, minInterestRatePerPeriod, maxInterestRatePerPeriod, interestFrequencyType,
                 annualInterestRate, interestMethod, interestCalculationPeriodMethod, allowPartialPeriodInterestCalcualtion, repaymentEvery,
@@ -400,7 +423,7 @@ public class LoanProduct extends AbstractPersistableCustom {
                 minimumGapBetweenInstallments, maximumGapBetweenInstallments, syncExpectedWithDisbursementDate, canUseForTopup,
                 isEqualAmortization, productRates, fixedPrincipalPercentagePerInstallment, disallowExpectedDisbursements,
                 allowApprovedDisbursedAmountsOverApplied, overAppliedCalculationType, overAppliedNumber, maxNumberOfLoanExtensionsAllowed,
-                loanTermIncludesToppedUpLoanTerm, isAccountLevelArrearsToleranceEnable);
+                loanTermIncludesToppedUpLoanTerm, isAccountLevelArrearsToleranceEnable, isBnplLoanProduct, requiresEquityContribution, equityContributionLoanPercentage);
 
     }
 
@@ -637,8 +660,8 @@ public class LoanProduct extends AbstractPersistableCustom {
             final boolean syncExpectedWithDisbursementDate, final boolean canUseForTopup, final boolean isEqualAmortization,
             final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment, final boolean disallowExpectedDisbursements,
             final boolean allowApprovedDisbursedAmountsOverApplied, final String overAppliedCalculationType,
-            final Integer overAppliedNumber, final Integer maxNumberOfLoanExtensionsAllowed,
-            final boolean loanTermIncludesToppedUpLoanTerm, final boolean isAccountLevelArrearsToleranceEnable) {
+            final Integer overAppliedNumber, final Integer maxNumberOfLoanExtensionsAllowed, final boolean loanTermIncludesToppedUpLoanTerm,
+            final boolean isAccountLevelArrearsToleranceEnable, Boolean isBnplLoanProduct, Boolean requiresEquityContribution, BigDecimal equityContributionLoanPercentage) {
         this.fund = fund;
         this.transactionProcessingStrategy = transactionProcessingStrategy;
         this.name = name.trim();
@@ -719,6 +742,9 @@ public class LoanProduct extends AbstractPersistableCustom {
         this.overAppliedNumber = overAppliedNumber;
         this.maxNumberOfLoanExtensionsAllowed = maxNumberOfLoanExtensionsAllowed;
         this.isAccountLevelArrearsToleranceEnable = isAccountLevelArrearsToleranceEnable;
+        this.isBnplLoanProduct = isBnplLoanProduct;
+        this.requiresEquityContribution = requiresEquityContribution;
+        this.equityContributionLoanPercentage = equityContributionLoanPercentage;
 
         if (rates != null) {
             this.rates = rates;
@@ -1232,10 +1258,33 @@ public class LoanProduct extends AbstractPersistableCustom {
             this.maxNumberOfLoanExtensionsAllowed = newValue;
         }
 
-        if (command.isChangeInBooleanParameterNamed(LoanProductConstants.IS_ACCOUNT_LEVEL_ARREARS_TOLERANCE_ENABLE, this.isAccountLevelArrearsToleranceEnable)) {
-            final boolean newValue = command.booleanPrimitiveValueOfParameterNamed(LoanProductConstants.IS_ACCOUNT_LEVEL_ARREARS_TOLERANCE_ENABLE);
+        if (command.isChangeInBooleanParameterNamed(LoanProductConstants.IS_ACCOUNT_LEVEL_ARREARS_TOLERANCE_ENABLE,
+                this.isAccountLevelArrearsToleranceEnable)) {
+            final boolean newValue = command
+                    .booleanPrimitiveValueOfParameterNamed(LoanProductConstants.IS_ACCOUNT_LEVEL_ARREARS_TOLERANCE_ENABLE);
             actualChanges.put(LoanProductConstants.IS_ACCOUNT_LEVEL_ARREARS_TOLERANCE_ENABLE, newValue);
             this.isAccountLevelArrearsToleranceEnable = newValue;
+        }
+
+        if (command.isChangeInBooleanParameterNamed(LoanProductConstants.isBnplLoanProductParamName,
+                this.isBnplLoanProduct)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(LoanProductConstants.isBnplLoanProductParamName);
+            actualChanges.put(LoanProductConstants.isBnplLoanProductParamName, newValue);
+            this.isBnplLoanProduct = newValue;
+        }
+
+        if (command.isChangeInBooleanParameterNamed(LoanProductConstants.requiresEquityContributionParamName,
+                this.requiresEquityContribution)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(LoanProductConstants.requiresEquityContributionParamName);
+            actualChanges.put(LoanProductConstants.requiresEquityContributionParamName, newValue);
+            this.requiresEquityContribution = newValue;
+        }
+
+        if (command.isChangeInBigDecimalParameterNamed(LoanProductConstants.equityContributionLoanPercentageParamName,
+                this.equityContributionLoanPercentage)) {
+            final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(LoanProductConstants.equityContributionLoanPercentageParamName);
+            actualChanges.put(LoanProductConstants.equityContributionLoanPercentageParamName, newValue);
+            this.equityContributionLoanPercentage = newValue;
         }
 
         return actualChanges;
@@ -1626,5 +1675,54 @@ public class LoanProduct extends AbstractPersistableCustom {
 
     public boolean isAccountLevelArrearsToleranceEnable() {
         return this.isAccountLevelArrearsToleranceEnable;
+    }
+
+    public Set<InterestRateChart> getCharts() {
+        return charts;
+    }
+
+    public void setCharts(Set<InterestRateChart> charts) {
+        this.charts = charts;
+    }
+
+    public InterestRateChart findChart(Long chartId) {
+        final Set<InterestRateChart> charts = setOfCharts();
+
+        for (InterestRateChart chart : charts) {
+            if (chart.getId().equals(chartId)) {
+                return chart;
+            }
+        }
+        return null;
+    }
+
+    public boolean removeChart(InterestRateChart chart) {
+        Set<InterestRateChart> charts = setOfCharts();
+        return charts.remove(chart);
+    }
+
+    public Set<InterestRateChart> setOfCharts() {
+        if (this.charts == null) {
+            this.charts = new HashSet<>();
+        }
+        return this.charts;
+    }
+
+    public void addChart(final InterestRateChart newChart) {
+        final Set<InterestRateChart> existingCharts = setOfCharts();
+        existingCharts.add(newChart);
+    }
+
+
+    public Boolean getBnplLoanProduct() {
+        return isBnplLoanProduct;
+    }
+
+    public Boolean isRequiresEquityContribution() {
+        return requiresEquityContribution;
+    }
+
+    public BigDecimal getEquityContributionLoanPercentage() {
+        return equityContributionLoanPercentage;
     }
 }

@@ -69,6 +69,8 @@ import org.apache.fineract.portfolio.floatingrates.data.FloatingRateData;
 import org.apache.fineract.portfolio.floatingrates.service.FloatingRatesReadPlatformService;
 import org.apache.fineract.portfolio.fund.data.FundData;
 import org.apache.fineract.portfolio.fund.service.FundReadPlatformService;
+import org.apache.fineract.portfolio.interestratechart.data.InterestRateChartData;
+import org.apache.fineract.portfolio.interestratechart.service.InterestRateChartReadPlatformService;
 import org.apache.fineract.portfolio.loanaccount.api.LoanApiConstants;
 import org.apache.fineract.portfolio.loanproduct.LoanProductConstants;
 import org.apache.fineract.portfolio.loanproduct.data.LoanProductData;
@@ -130,6 +132,7 @@ public class LoanProductsApiResource {
     private final FloatingRatesReadPlatformService floatingRateReadPlatformService;
     private final RateReadService rateReadService;
     private final ConfigurationDomainService configurationDomainService;
+    private final InterestRateChartReadPlatformService chartReadPlatformService;
 
     @Autowired
     public LoanProductsApiResource(final PlatformSecurityContext context, final LoanProductReadPlatformService readPlatformService,
@@ -145,7 +148,7 @@ public class LoanProductsApiResource {
             final DropdownReadPlatformService commonDropdownReadPlatformService,
             PaymentTypeReadPlatformService paymentTypeReadPlatformService,
             final FloatingRatesReadPlatformService floatingRateReadPlatformService, final RateReadService rateReadService,
-            final ConfigurationDomainService configurationDomainService) {
+            final ConfigurationDomainService configurationDomainService, InterestRateChartReadPlatformService chartReadPlatformService) {
         this.context = context;
         this.loanProductReadPlatformService = readPlatformService;
         this.chargeReadPlatformService = chargeReadPlatformService;
@@ -164,6 +167,7 @@ public class LoanProductsApiResource {
         this.floatingRateReadPlatformService = floatingRateReadPlatformService;
         this.rateReadService = rateReadService;
         this.configurationDomainService = configurationDomainService;
+        this.chartReadPlatformService = chartReadPlatformService;
     }
 
     @POST
@@ -285,6 +289,8 @@ public class LoanProductsApiResource {
         if (settings.isTemplate()) {
             loanProduct = handleTemplate(loanProduct);
         }
+        final Collection<InterestRateChartData> charts = this.chartReadPlatformService.retrieveAllWithSlabsWithTemplateForLoan(productId);
+        loanProduct.setInterestRateCharts(charts);
         return this.toApiJsonSerializer.serialize(settings, loanProduct, this.loanProductDataParameters);
     }
 
@@ -366,13 +372,17 @@ public class LoanProductsApiResource {
                 .retrivePreCloseInterestCalculationStrategyOptions();
         final List<FloatingRateData> floatingRateOptions = this.floatingRateReadPlatformService.retrieveLookupActive();
 
-        return new LoanProductData(productData, chargeOptions, penaltyOptions, paymentTypeOptions, currencyOptions, amortizationTypeOptions,
+        LoanProductData loanProductDataResponse = new LoanProductData(productData, chargeOptions, penaltyOptions, paymentTypeOptions, currencyOptions, amortizationTypeOptions,
                 interestTypeOptions, interestCalculationPeriodTypeOptions, repaymentFrequencyTypeOptions, interestRateFrequencyTypeOptions,
                 fundOptions, transactionProcessingStrategyOptions, rateOptions, accountOptions, accountingRuleTypeOptions,
                 loanCycleValueConditionTypeOptions, daysInMonthTypeOptions, daysInYearTypeOptions,
                 interestRecalculationCompoundingTypeOptions, rescheduleStrategyTypeOptions, interestRecalculationFrequencyTypeOptions,
                 preCloseInterestCalculationStrategyOptions, floatingRateOptions, interestRecalculationNthDayTypeOptions,
                 interestRecalculationDayOfWeekTypeOptions, isRatesEnabled);
+        loanProductDataResponse.setBnplLoanProduct(productData.getBnplLoanProduct());
+        loanProductDataResponse.setRequiresEquityContribution(productData.getRequiresEquityContribution());
+        loanProductDataResponse.setEquityContributionLoanPercentage(productData.getEquityContributionLoanPercentage());
+        return loanProductDataResponse;
     }
 
 }
