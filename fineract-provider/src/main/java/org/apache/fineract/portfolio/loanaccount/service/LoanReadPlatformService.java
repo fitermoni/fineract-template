@@ -97,6 +97,9 @@ public interface LoanReadPlatformService {
      */
     Collection<OverdueLoanScheduleData> retrieveAllLoansWithOverdueInstallments(Long penaltyWaitPeriod, Boolean backdatePenalties);
 
+    Collection<OverdueLoanScheduleData> retrieveLoanAccountWithOverdueInstallments(Long penaltyWaitPeriod, Boolean backdatePenalties,
+            Long loanId);
+
     Integer retriveLoanCounter(Long groupId, Integer loanType, Long productId);
 
     Integer retriveLoanCounter(Long clientId, Long productId);
@@ -170,4 +173,6 @@ public interface LoanReadPlatformService {
     List<LoanOverdueReminderData> findLoanOverdueReminderData(Integer numberOfDaysToDueDate);
 
     Collection<PortfolioAccountData> retrieveVendorSavingAccountsForBnplLoans(Long vendorClientId);
+
+    Collection<LoanTransactionData> retrieveLoanTransactions(final String filterConstraintJson, final Integer limit, final Integer offset);
 }

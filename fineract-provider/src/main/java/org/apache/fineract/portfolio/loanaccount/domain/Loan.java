@@ -4681,6 +4681,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             break;
             case INVALID:
             break;
+            case DAYS_28:
             case WHOLE_TERM:
             break;
         }
@@ -5747,7 +5748,9 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
                 calendarHistoryDataWrapper, scheduleGeneratorDTO.getNumberOfdays(), scheduleGeneratorDTO.isSkipRepaymentOnFirstDayofMonth(),
                 holidayDetailDTO, allowCompoundingOnEod, scheduleGeneratorDTO.isFirstRepaymentDateAllowedOnHoliday(),
                 scheduleGeneratorDTO.isInterestToBeRecoveredFirstWhenGreaterThanEMI(), this.fixedPrincipalPercentagePerInstallment,
-                scheduleGeneratorDTO.isPrincipalCompoundingDisabledForOverdueLoans(), advancePaymentInterestForExactDaysInPeriod);
+                scheduleGeneratorDTO.isPrincipalCompoundingDisabledForOverdueLoans(), advancePaymentInterestForExactDaysInPeriod,
+                scheduleGeneratorDTO.getTotalNumberOfInstallmentFromOriginalSchedule());
+
         return loanApplicationTerms;
     }
 
@@ -6026,7 +6029,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
                 compoundingCalendarInstance, compoundingFrequencyType, this.loanProduct.preCloseInterestCalculationStrategy(),
                 rescheduleStrategyMethod, loanCalendar, getApprovedPrincipal(), annualNominalInterestRate, loanTermVariations,
                 calendarHistoryDataWrapper, numberofdays, isSkipRepaymentonmonthFirst, holidayDetailDTO, allowCompoundingOnEod, false,
-                false, this.fixedPrincipalPercentagePerInstallment, false, advancePaymentInterestForExactDaysInPeriod);
+                false, this.fixedPrincipalPercentagePerInstallment, false, advancePaymentInterestForExactDaysInPeriod, null);
     }
 
     /**
