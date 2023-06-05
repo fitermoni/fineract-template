@@ -37,6 +37,8 @@ public class LoanRecoveryPaymentCommandHandler implements NewCommandSourceHandle
     @Override
     public CommandProcessingResult processCommand(JsonCommand command) {
         final boolean isRecoveryRepayment = true;
-        return writePlatformService.makeLoanRepayment(LoanTransactionType.REPAYMENT, command.getLoanId(), command, isRecoveryRepayment);
+        final boolean isPayOff = false;
+        return writePlatformService.makeLoanRepayment(LoanTransactionType.REPAYMENT, command.getLoanId(), command, isRecoveryRepayment,
+                isPayOff);
     }
 }
