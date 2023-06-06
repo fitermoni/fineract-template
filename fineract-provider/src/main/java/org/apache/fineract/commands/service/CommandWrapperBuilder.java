@@ -3700,4 +3700,13 @@ public class CommandWrapperBuilder {
         this.href = "/rescheduleloans/" + loanId;
         return this;
     }
+
+    public CommandWrapperBuilder loanPayOfLoan(Long loanId) {
+        this.actionName = "PAY_OFF";
+        this.loanId = loanId;
+        this.entityName = "LOAN";
+        this.entityId = loanId;
+        this.href = "/payoffloans/" + loanId;
+        return this;
+    }
 }
