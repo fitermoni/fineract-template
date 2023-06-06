@@ -173,24 +173,27 @@ public class AuditsApiResource {
             final Integer clientId, final Integer loanId, final Integer savingsAccountId) {
 
         SQLBuilder extraCriteria = new SQLBuilder();
-        extraCriteria.addNonNullCriteria("aud.action_name = ", actionName);
-        if (entityName != null) {
-            extraCriteria.addCriteria("aud.entity_name like", entityName + "%");
+        if (clientId != null) {
+            extraCriteria.addORCriteria("aud.client_id = ", clientId);
+            extraCriteria.addORCriteria("aud.entity_name = 'CLIENT' and aud.resource_id = ", clientId);
+        } else {
+            extraCriteria.addNonNullCriteria("aud.action_name = ", actionName);
+            if (entityName != null) {
+                extraCriteria.addCriteria("aud.entity_name like", entityName + "%");
+            }
+            extraCriteria.addNonNullCriteria("aud.resource_id = ", resourceId);
+            extraCriteria.addNonNullCriteria("aud.maker_id = ", makerId);
+            extraCriteria.addNonNullCriteria("aud.checker_id = ", checkerId);
+            extraCriteria.addNonNullCriteria("aud.made_on_date >= ", makerDateTimeFrom);
+            extraCriteria.addNonNullCriteria("aud.made_on_date <= ", makerDateTimeTo);
+            extraCriteria.addNonNullCriteria("aud.checked_on_date >= ", checkerDateTimeFrom);
+            extraCriteria.addNonNullCriteria("aud.checked_on_date <= ", checkerDateTimeTo);
+            extraCriteria.addNonNullCriteria("aud.processing_result_enum = ", processingResult);
+            extraCriteria.addNonNullCriteria("aud.office_id = ", officeId);
+            extraCriteria.addNonNullCriteria("aud.group_id = ", groupId);
+            extraCriteria.addNonNullCriteria("aud.loan_id = ", loanId);
+            extraCriteria.addNonNullCriteria("aud.savings_account_id = ", savingsAccountId);
         }
-        extraCriteria.addNonNullCriteria("aud.resource_id = ", resourceId);
-        extraCriteria.addNonNullCriteria("aud.maker_id = ", makerId);
-        extraCriteria.addNonNullCriteria("aud.checker_id = ", checkerId);
-        extraCriteria.addNonNullCriteria("aud.made_on_date >= ", makerDateTimeFrom);
-        extraCriteria.addNonNullCriteria("aud.made_on_date <= ", makerDateTimeTo);
-        extraCriteria.addNonNullCriteria("aud.checked_on_date >= ", checkerDateTimeFrom);
-        extraCriteria.addNonNullCriteria("aud.checked_on_date <= ", checkerDateTimeTo);
-        extraCriteria.addNonNullCriteria("aud.processing_result_enum = ", processingResult);
-        extraCriteria.addNonNullCriteria("aud.office_id = ", officeId);
-        extraCriteria.addNonNullCriteria("aud.group_id = ", groupId);
-        extraCriteria.addNonNullCriteria("aud.client_id = ", clientId);
-        extraCriteria.addNonNullCriteria("aud.loan_id = ", loanId);
-        extraCriteria.addNonNullCriteria("aud.savings_account_id = ", savingsAccountId);
-
         return extraCriteria;
     }
 }
