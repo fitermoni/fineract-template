@@ -1,9 +1,9 @@
-name: Deploy to ECR
+name: Deploy to ECR Inkomoko
 
 on:
-
   push:
-    branches: [ inkomoko ]
+    branches:
+      - inkomoko
 
 jobs:
 
