@@ -372,8 +372,7 @@ public class DepositProductDataValidator {
 
             validatePaymentChannelFundSourceMappings(fromApiJsonHelper, baseDataValidator, element);
             validateChargeToIncomeAccountMappings(fromApiJsonHelper, baseDataValidator, element);
-        }
-        else if (isAccrualAccounting(accountingRuleType)) {
+        } else if (isAccrualAccounting(accountingRuleType)) {
 
             final Long savingsControlAccountId = fromApiJsonHelper
                     .extractLongNamed(SavingProductAccountingParams.SAVINGS_CONTROL.getValue(), element);
@@ -637,7 +636,7 @@ public class DepositProductDataValidator {
         final Integer accountingRuleType = fromApiJsonHelper.extractIntegerNamed("accountingRule", element, Locale.getDefault());
         baseDataValidator.reset().parameter("accountingRule").value(accountingRuleType).notNull().inMinMaxRange(1, 3);
 
-        if(isAccrualAccounting(accountingRuleType)){
+        if (isAccrualAccounting(accountingRuleType)) {
             final Long receivablePenaltyAccountId = this.fromApiJsonHelper
                     .extractLongNamed(SavingProductAccountingParams.PENALTIES_RECEIVABLE.getValue(), element);
             baseDataValidator.reset().parameter(SavingProductAccountingParams.PENALTIES_RECEIVABLE.getValue())
