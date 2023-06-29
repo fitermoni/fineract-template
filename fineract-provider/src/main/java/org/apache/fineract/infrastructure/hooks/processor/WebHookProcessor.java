@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -117,11 +116,11 @@ public class WebHookProcessor implements HookProcessor {
         }
     }
 
-    private String compilePayLoad(final Template template, final Map<String, Object> requestMap){
+    private String compilePayLoad(final Template template, final Map<String, Object> requestMap) {
         Map<String, Object> payLoadMap = new HashMap<>();
         for (final TemplateMapper mapper : template.getMappers()) {
-            payLoadMap.put(mapper.getMapperkey(),  requestMap.get(mapper.getMappervalue()));
+            payLoadMap.put(mapper.getMapperkey(), requestMap.get(mapper.getMappervalue()));
         }
-        return  new Gson().toJson(payLoadMap);
+        return new Gson().toJson(payLoadMap);
     }
 }
