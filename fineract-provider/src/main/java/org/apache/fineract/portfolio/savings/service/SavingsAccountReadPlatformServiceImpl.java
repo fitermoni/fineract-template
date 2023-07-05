@@ -25,6 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -486,8 +487,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     }
 
     @Override
-    public Collection<SavingsAccountTransactionData> retrieveAllTransactions(final Long savingsId, DepositAccountType depositAccountType,
-            Integer offset, Integer limit) {
+    public Collection<SavingsAccountTransactionData> retrieveAllTransactions(final Long savingsId, Integer offset, Integer limit) {
         if (offset == null) {
             offset = 0;
         }
@@ -495,10 +495,9 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             limit = 15;
         }
         final String sql = "select " + this.transactionsMapper.schema()
-                + " where sa.id = ? and sa.deposit_type_enum = ? AND transaction_type_enum not in (22,25)  order by tr.transaction_date DESC, tr.created_date DESC, tr.id DESC LIMIT ? OFFSET ?  ";
+                + " where sa.id = ? AND transaction_type_enum not in (22,25)  order by tr.transaction_date DESC, tr.created_date DESC, tr.id DESC LIMIT ? OFFSET ?  ";
 
-        return this.jdbcTemplate.query(sql, this.transactionsMapper,
-                new Object[] { savingsId, depositAccountType.getValue(), limit, offset }); // NOSONAR
+        return this.jdbcTemplate.query(sql, this.transactionsMapper, new Object[] { savingsId, limit, offset }); // NOSONAR
     }
 
     @Override
@@ -694,7 +693,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     @Override
     public List<Long> retrieveActiveSavingAccountsWithZeroInterest() {
         String sql = "select id from m_savings_account where status_enum = 300 and nominal_annual_interest_rate != 0 and deposit_type_enum != 200";
-        return this.jdbcTemplate.queryForList(sql, Long.class, true);
+        return this.jdbcTemplate.queryForList(sql, Long.class);
     }
 
     @Override
@@ -765,6 +764,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("sa.approvedon_date as approvedOnDate,");
             sqlBuilder.append("sa.activatedon_date as activatedOnDate,");
             sqlBuilder.append("sa.closedon_date as closedOnDate,");
+
             sqlBuilder.append(
                     "sa.currency_code as currencyCode, sa.currency_digits as currencyDigits, sa.currency_multiplesof as inMultiplesOf, ");
             sqlBuilder.append("sa.nominal_annual_interest_rate as nominalAnnualInterestRate, ");
@@ -1058,7 +1058,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                             enforceMinRequiredBalance, maxAllowedLienLimit, lienAllowed, minBalanceForInterestCalculation, onHoldFunds,
                             nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax, taxGroupData,
                             lastActiveTransactionDate, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat,
-                            onHoldAmount, numOfCreditTransaction, numOfDebitTransaction, blockNarration, null, null, null, null);
+                            onHoldAmount, numOfCreditTransaction, numOfDebitTransaction, blockNarration, null, null, null, null, null);
 
                     savingsAccountData.setClientData(clientData);
                     savingsAccountData.setGroupGeneralData(groupGeneralData);
@@ -1500,7 +1500,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                     nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax, taxGroupData,
                     lastActiveTransactionDate, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat, onHoldAmount,
                     numOfCreditTransaction, numOfDebitTransaction, blockNarration, vaultTargetDate, vaultTargetAmount, accountType,
-                    lockedInUntilDate);
+                    lockedInUntilDate, null);
             savingsAccountData.setUseFloatingInterestRate(useFloatingInterestRate);
             savingsAccountData.setWithdrawalFrequency(withdrawalFrequency);
             savingsAccountData.setWithdrawalFrequencyEnum(withdrawalFrequencyEnum);
@@ -1639,6 +1639,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
             final LocalDate date = JdbcSupport.getLocalDate(rs, "transactionDate");
             final LocalDate submittedOnDate = JdbcSupport.getLocalDate(rs, "submittedOnDate");
+            final LocalDateTime createdDate = JdbcSupport.getLocalDateTime(rs, "submittedOnDate");
             final BigDecimal amount = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "transactionAmount");
             final Long releaseTransactionId = rs.getLong("releaseTransactionId");
             final String reasonForBlock = rs.getString("reasonForBlock");
@@ -1702,7 +1703,8 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final String note = rs.getString("transactionNote");
             return SavingsAccountTransactionData.create(id, transactionType, paymentDetailData, savingsId, accountNo, date, currency,
                     amount, outstandingChargeAmount, runningBalance, reversed, transfer, submittedOnDate, postInterestAsOn,
-                    submittedByUsername, note, isReversal, originalTransactionId, lienTransaction, releaseTransactionId, reasonForBlock);
+                    submittedByUsername, note, isReversal, originalTransactionId, lienTransaction, releaseTransactionId, reasonForBlock,
+                    createdDate);
         }
     }
 
@@ -1743,7 +1745,8 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final CurrencyData currency = new CurrencyData(currencyCode, currencyName, currencyDigits, inMultiplesOf, currencyDisplaySymbol,
                     currencyNameCode);
 
-            return SavingsAccountTransactionData.template(savingsId, accountNo, DateUtils.getBusinessLocalDate(), currency);
+            return SavingsAccountTransactionData.template(savingsId, accountNo, DateUtils.getBusinessLocalDate(), currency,
+                    DateUtils.getLocalDateTimeOfTenant());
         }
     }
 
@@ -1759,7 +1762,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             this.group = group;
 
             final StringBuilder sqlBuilder = new StringBuilder(400);
-            sqlBuilder.append("sp.id as productId, sp.name as productName, ");
+            sqlBuilder.append("sp.id as productId, sp.name as productName, sp.name as productName, ");
             sqlBuilder.append(
                     "sp.currency_code as currencyCode, sp.currency_digits as currencyDigits, sp.currency_multiplesof as inMultiplesOf, ");
             sqlBuilder.append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ");
@@ -1919,7 +1922,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                     maxAllowedLienLimit, lienAllowed, minBalanceForInterestCalculation, onHoldFunds, nominalAnnualInterestRateOverdraft,
                     minOverdraftForInterestCalculation, withHoldTax, taxGroupData, lastActiveTransactionDate, isDormancyTrackingActive,
                     daysToInactive, daysToDormancy, daysToEscheat, savingsAmountOnHold, numOfCreditTransaction, numOfDebitTransaction, null,
-                    null, null, null, null);
+                    null, null, null, null, null);
             savingsAccountData.setUseFloatingInterestRate(useFloatingInterestRate);
             savingsAccountData.setWithdrawalFrequency(withdrawalFrequency);
             savingsAccountData.setWithdrawalFrequencyEnum(withdrawalFrequencyEnum);

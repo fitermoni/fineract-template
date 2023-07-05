@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.codes.domain.CodeValueRepositoryWrapper;
@@ -53,6 +54,8 @@ import org.apache.fineract.portfolio.loanaccount.domain.ChangedTransactionDetail
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanAccountDomainService;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanLifecycleStateMachine;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentReminder;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentReminderRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallmentRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleTransactionProcessorFactory;
@@ -80,6 +83,8 @@ import org.apache.fineract.portfolio.loanaccount.rescheduleloan.domain.LoanResch
 import org.apache.fineract.portfolio.loanaccount.rescheduleloan.exception.LoanRescheduleRequestNotFoundException;
 import org.apache.fineract.portfolio.loanaccount.service.LoanAssembler;
 import org.apache.fineract.portfolio.loanaccount.service.LoanUtilService;
+import org.apache.fineract.portfolio.note.domain.Note;
+import org.apache.fineract.portfolio.note.domain.NoteRepository;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,6 +120,9 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
     private final LoanAccountDomainService loanAccountDomainService;
     private final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository;
 
+    private final NoteRepository noteRepository;
+    private final LoanRepaymentReminderRepository loanRepaymentReminderRepository;
+
     /**
      * LoanRescheduleRequestWritePlatformServiceImpl constructor
      *
@@ -135,7 +143,8 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
             final LoanScheduleGeneratorFactory loanScheduleFactory, final LoanSummaryWrapper loanSummaryWrapper,
             final AccountTransfersWritePlatformService accountTransfersWritePlatformService,
             final LoanAccountDomainService loanAccountDomainService,
-            final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository) {
+            final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository, NoteRepository noteRepository,
+            final LoanRepaymentReminderRepository loanRepaymentReminderRepository) {
         this.codeValueRepositoryWrapper = codeValueRepositoryWrapper;
         this.platformSecurityContext = platformSecurityContext;
         this.loanRescheduleRequestDataValidator = loanRescheduleRequestDataValidator;
@@ -154,6 +163,8 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
         this.accountTransfersWritePlatformService = accountTransfersWritePlatformService;
         this.loanAccountDomainService = loanAccountDomainService;
         this.repaymentScheduleInstallmentRepository = repaymentScheduleInstallmentRepository;
+        this.noteRepository = noteRepository;
+        this.loanRepaymentReminderRepository = loanRepaymentReminderRepository;
     }
 
     /**
@@ -521,6 +532,8 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
             // update the status of the request
             loanRescheduleRequest.approve(appUser, approvedOnDate);
 
+            deleteLoanRepaymentRemindersAssociatedToThisLoanAccount(loan);
+
             // update the loan object
             saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
 
@@ -638,6 +651,42 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
         }
     }
 
+    @Override
+    public CommandProcessingResult undo(JsonCommand jsonCommand) {
+        try {
+            this.platformSecurityContext.authenticatedUser();
+            this.loanRescheduleRequestDataValidator.validateForUndoAction(jsonCommand);
+            final var loanId = jsonCommand.entityId();
+            final var loan = loanRepositoryWrapper.findOneWithNotFoundDetection(loanId);
+            final var loanRescheduleRequests = loanRescheduleRequestRepository.findByLoanIdAndStatusEnum(loanId,
+                    LoanStatus.SUBMITTED_AND_PENDING_APPROVAL.getValue());
+
+            if (loanRescheduleRequests.isEmpty()) {
+                throw new LoanRescheduleRequestNotFoundException();
+            }
+
+            loanRescheduleRequests.stream()
+                    .peek(loanRescheduleRequest -> loanRescheduleRequest.getLoanRescheduleRequestToTermVariationMappings().stream()
+                            .forEach(loanRescheduleRequestToTermVariationMapping -> loanRescheduleRequestToTermVariationMapping
+                                    .getLoanTermVariations().markAsInactive()))
+                    .forEach(LoanRescheduleRequest::undo);
+            loanRescheduleRequestRepository.saveAllAndFlush(loanRescheduleRequests);
+            final var noteText = jsonCommand.stringValueOfParameterNamed(RescheduleLoansApiConstants.notesParamName);
+            var note = Note.loanNote(loan, noteText);
+            this.noteRepository.save(note);
+            return new CommandProcessingResultBuilder().withCommandId(jsonCommand.commandId()).withEntityId(loanId).withLoanId(loanId)
+                    .build();
+        }
+
+        catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            // handle the data integrity violation
+            handleDataIntegrityViolation(dve);
+
+            // return an empty command processing result object
+            return CommandProcessingResult.empty();
+        }
+    }
+
     /**
      * handles the data integrity violation exception for loan reschedule write services
      *
@@ -651,6 +700,16 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
 
         throw new PlatformDataIntegrityException("error.msg.loan.reschedule.unknown.data.integrity.issue",
                 "Unknown data integrity issue with resource.");
+    }
+
+    private void deleteLoanRepaymentRemindersAssociatedToThisLoanAccount(Loan loan) {
+        // delete dependencies on m_loan_repayment_reminder associated with this Loan Account
+        List<LoanRepaymentReminder> loanRepaymentReminders = loanRepaymentReminderRepository
+                .getLoanRepaymentReminderByLoanId(loan.getId().intValue());
+
+        if (!CollectionUtils.isEmpty(loanRepaymentReminders)) {
+            loanRepaymentReminderRepository.deleteAll(loanRepaymentReminders);
+        }
     }
 
 }

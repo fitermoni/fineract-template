@@ -439,6 +439,20 @@ public final class LoanEnumerations {
                 optionData = new LoanTransactionEnumData(LoanTransactionType.TOP_UP.getValue().longValue(),
                         LoanTransactionType.TOP_UP.getCode(), "Top Up");
             break;
+
+            case WITHDRAWAL_REDRAW:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.WITHDRAWAL_REDRAW.getValue().longValue(),
+                        LoanTransactionType.WITHDRAWAL_REDRAW.getCode(), "Withdraw from Redraw");
+            break;
+            case DEPOSIT_REDRAW:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.DEPOSIT_REDRAW.getValue().longValue(),
+                        LoanTransactionType.DEPOSIT_REDRAW.getCode(), "Deposit Redraw");
+            break;
+
+            case PAY_OFF:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.PAY_OFF.getValue().longValue(),
+                        LoanTransactionType.PAY_OFF.getCode(), "Payoff");
+            break;
         }
         return optionData;
     }
@@ -503,6 +517,10 @@ public final class LoanEnumerations {
                 optionData = new LoanStatusEnumData(LoanStatus.TRANSFER_ON_HOLD.getValue().longValue(),
                         LoanStatus.TRANSFER_ON_HOLD.getCode(), "Transfer on hold");
             break;
+
+            case UNDO_LOAN_RESCHEDULE:
+                optionData = new LoanStatusEnumData(LoanStatus.UNDO_LOAN_RESCHEDULE.getValue().longValue(),
+                        LoanStatus.UNDO_LOAN_RESCHEDULE.getCode(), "Undo Loan Reschedule");
         }
 
         return optionData;

@@ -43,9 +43,10 @@ public class LoanGoodwillCreditCommandHandler implements NewCommandSourceHandler
     @Override
     public CommandProcessingResult processCommand(final JsonCommand command) {
         try {
-            boolean isRecoveryRepayment = false;
+            final boolean isRecoveryRepayment = false;
+            final boolean isPayOff = false;
             return this.writePlatformService.makeLoanRepayment(LoanTransactionType.GOODWILL_CREDIT, command.getLoanId(), command,
-                    isRecoveryRepayment);
+                    isRecoveryRepayment, isPayOff);
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             dataIntegrityErrorHandler.handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve, "loan.goodwillCredit",
                     "Goodwill Credit");

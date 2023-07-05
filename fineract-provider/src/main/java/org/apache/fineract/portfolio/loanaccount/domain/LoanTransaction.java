@@ -245,6 +245,18 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom {
         return new LoanTransaction(null, office, LoanTransactionType.REFUND, paymentDetail, amount.getAmount(), paymentDate, externalId);
     }
 
+    public static LoanTransaction withdrawFromRedraw(final Office office, final Money amount, final PaymentDetail paymentDetail,
+            final LocalDate paymentDate, final String externalId, final Loan loan) {
+        return new LoanTransaction(loan, office, LoanTransactionType.WITHDRAWAL_REDRAW, paymentDetail, amount.getAmount(), paymentDate,
+                externalId);
+    }
+
+    public static LoanTransaction applyRedrawRepayment(final Office office, final Money amount, final PaymentDetail paymentDetail,
+            final LocalDate paymentDate, final String externalId, final Loan loan) {
+        return new LoanTransaction(loan, office, LoanTransactionType.DEPOSIT_REDRAW, paymentDetail, amount.getAmount(), paymentDate,
+                externalId);
+    }
+
     public static LoanTransaction copyTransactionProperties(final LoanTransaction loanTransaction) {
         return new LoanTransaction(loanTransaction.loan, loanTransaction.office, loanTransaction.typeOf, loanTransaction.dateOf,
                 loanTransaction.amount, loanTransaction.principalPortion, loanTransaction.interestPortion,
@@ -555,6 +567,10 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom {
         return getTypeOf().isChargePayment() && isNotReversed();
     }
 
+    public boolean isPayoff() {
+        return LoanTransactionType.PAY_OFF.equals(getTypeOf()) && isNotReversed();
+    }
+
     public boolean isPenaltyPayment() {
         boolean isPenalty = false;
         if (isChargePayment()) {
@@ -619,7 +635,8 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom {
         return new LoanTransactionData(getId(), this.office.getId(), this.office.getName(), transactionType, paymentDetailData,
                 currencyData, getTransactionDate(), this.amount, this.loan.getNetDisbursalAmount(), this.principalPortion,
                 this.interestPortion, this.feeChargesPortion, this.penaltyChargesPortion, this.overPaymentPortion, this.externalId,
-                transfer, null, outstandingLoanBalance, this.unrecognizedIncomePortion, this.manuallyAdjustedOrReversed);
+                transfer, null, outstandingLoanBalance, this.unrecognizedIncomePortion, this.manuallyAdjustedOrReversed,
+                this.getCreatedDateTime().toLocalDateTime());
     }
 
     public Map<String, Object> toMapData(final CurrencyData currencyData) {

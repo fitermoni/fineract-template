@@ -176,6 +176,8 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanInstallmentCharge;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanInterestRecalcualtionAdditionalDetails;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanLifecycleStateMachine;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanOverdueInstallmentCharge;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentReminder;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentReminderRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleTransactionProcessorFactory;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
@@ -279,6 +281,8 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     private final LoanRepository loanRepository;
     private final RepaymentWithPostDatedChecksAssembler repaymentWithPostDatedChecksAssembler;
     private final PostDatedChecksRepository postDatedChecksRepository;
+    private final LoanRepaymentReminderRepository loanRepaymentReminderRepository;
+
     @Autowired
     private ActiveMqNotificationDomainServiceImpl activeMqNotificationDomainService;
     @Autowired
@@ -923,7 +927,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         int j = 0;
         for (JsonElement element : repayments) {
             childCommand = JsonCommand.fromExistingCommand(command, element);
-            result = makeLoanRepayment(LoanTransactionType.REPAYMENT, childLoanId[j++], childCommand, false);
+            result = makeLoanRepayment(LoanTransactionType.REPAYMENT, childLoanId[j++], childCommand, false, false);
         }
         return result;
     }
@@ -931,9 +935,9 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     @Transactional
     @Override
     public CommandProcessingResult makeLoanRepayment(final LoanTransactionType repaymentTransactionType, final Long loanId,
-            final JsonCommand command, final boolean isRecoveryRepayment) {
+            final JsonCommand command, final boolean isRecoveryRepayment, final boolean isPayOff) {
         final AppUser currentUser = getAppUserIfPresent();
-        this.loanUtilService.validateRepaymentTransactionType(repaymentTransactionType);
+        this.loanUtilService.validateRepaymentTransactionType(repaymentTransactionType, isPayOff);
         this.loanEventApiJsonValidator.validateNewRepaymentTransaction(command.json());
 
         final LocalDate transactionDate = command.localDateValueOfParameterNamed("transactionDate");
@@ -992,6 +996,10 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             // Don't react to this exception because If messaging fails, RpPayment Transaction shouldn't rollback
         }
 
+        if (loan.getTotalOverpaid() != null) {
+            loanRepositoryWrapper.updateRedrawAmount(loan, currentUser, loanId, loan.getTotalOverpaid(), true, transactionDate,
+                    paymentDetail);
+        }
         return commandProcessingResultBuilder.withCommandId(command.commandId()) //
                 .withLoanId(loanId) //
                 .with(changes) //
@@ -1912,6 +1920,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 accruedCharge = accruedCharge.plus(chargePaidByData.getAmount());
             }
         }
+        deleteLoanRepaymentRemindersAssociatedToThisLoanAccount(loan);
 
         final LoanTransaction waiveTransaction = loan.waiveLoanCharge(loanCharge, defaultLoanLifecycleStateMachine(), changes,
                 existingTransactionIds, existingReversedTransactionIds, loanInstallmentNumber, scheduleGeneratorDTO, accruedCharge);
@@ -3294,6 +3303,15 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     }
 
     @Override
+    public CommandProcessingResult payOffLoan(Long loanId, JsonCommand command) {
+        final boolean isRecoveryPayment = false;
+        final boolean isPayOff = true;
+        CommandProcessingResult result = this.makeLoanRepayment(LoanTransactionType.PAY_OFF, command.getLoanId(), command,
+                isRecoveryPayment, isPayOff);
+        return result;
+    }
+
+    @Override
     @Transactional
     public CommandProcessingResult makeLoanRefund(Long loanId, JsonCommand command) {
 
@@ -3468,6 +3486,16 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 
         }
 
+    }
+
+    private void deleteLoanRepaymentRemindersAssociatedToThisLoanAccount(Loan loan) {
+        // delete dependencies on m_loan_repayment_reminder associated with this Loan Account
+        List<LoanRepaymentReminder> loanRepaymentReminders = loanRepaymentReminderRepository
+                .getLoanRepaymentReminderByLoanId(loan.getId().intValue());
+
+        if (!CollectionUtils.isEmpty(loanRepaymentReminders)) {
+            loanRepaymentReminderRepository.deleteAll(loanRepaymentReminders);
+        }
     }
 
 }

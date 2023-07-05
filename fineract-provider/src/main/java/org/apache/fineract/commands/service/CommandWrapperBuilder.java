@@ -318,6 +318,22 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder createTask() {
+        this.actionName = "ADD";
+        this.entityName = "TASKS";
+        this.entityId = null;
+        this.href = "/task/template";
+        return this;
+    }
+
+    public CommandWrapperBuilder updateTask(final Long taskId) {
+        this.actionName = "UPDATE";
+        this.entityName = "TASKS";
+        this.entityId = taskId;
+        this.href = "/task/" + taskId;
+        return this;
+    }
+
     public CommandWrapperBuilder createGuarantor(final Long loanId) {
         this.actionName = "CREATE";
         this.entityName = "GUARANTOR";
@@ -1022,6 +1038,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder withdrawalFromRedraw(final Long loanId) {
+        this.actionName = "WITHDRAWAL_REDRAW";
+        this.entityName = "LOAN";
+        this.entityId = loanId;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId;
+        return this;
+    }
+
     public CommandWrapperBuilder approveLoanApplication(final Long loanId) {
         this.actionName = "APPROVE";
         this.entityName = "LOAN";
@@ -1330,6 +1355,24 @@ public class CommandWrapperBuilder {
         this.entityName = "SAVINGSACCOUNT";
         this.entityId = accountId;
         this.href = "/savingsaccounts/" + accountId;
+        return this;
+    }
+
+    public CommandWrapperBuilder createSavingsAccountNote(final Long accountId) {
+        this.actionName = "CREATE";
+        this.entityName = "SAVINGS_ACCOUNT_NOTE";
+        this.entityId = accountId;
+        this.savingsId = accountId;
+        this.href = "/savingsaccounts/" + accountId + "/notes";
+        return this;
+    }
+
+    public CommandWrapperBuilder updateSavingsAccountNote(final Long noteId, final Long accountId) {
+        this.actionName = "UPDATE";
+        this.entityName = "SAVINGS_ACCOUNT_NOTE";
+        this.entityId = noteId;
+        this.savingsId = accountId;
+        this.href = "/savingsaccounts/" + accountId + "/notes/" + noteId;
         return this;
     }
 
@@ -3638,6 +3681,32 @@ public class CommandWrapperBuilder {
         this.savingsId = accountId;
         this.entityId = accountId;
         this.href = "/savingsaccounts/" + accountId + "?command=nextWithdrawalDate";
+        return this;
+    }
+
+    public CommandWrapperBuilder applyRedrawPayment(Long loanId) {
+        this.actionName = "APPLY_REDRAW_PAYMENT";
+        this.entityName = "LOAN";
+        this.entityId = loanId;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId;
+        return this;
+    }
+
+    public CommandWrapperBuilder undoLoanReschedule(String entityName, Long loanId) {
+        this.actionName = "UNDO";
+        this.entityName = entityName;
+        this.entityId = loanId;
+        this.href = "/rescheduleloans/" + loanId;
+        return this;
+    }
+
+    public CommandWrapperBuilder loanPayOfLoan(Long loanId) {
+        this.actionName = "PAY_OFF";
+        this.loanId = loanId;
+        this.entityName = "LOAN";
+        this.entityId = loanId;
+        this.href = "/payoffloans/" + loanId;
         return this;
     }
 }

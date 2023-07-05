@@ -18,13 +18,19 @@
  */
 package org.apache.fineract.portfolio.loanaccount.domain;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
+import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,14 +41,13 @@ import org.springframework.transaction.annotation.Transactional;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class LoanRepositoryWrapper {
 
     private final LoanRepository repository;
 
-    @Autowired
-    public LoanRepositoryWrapper(final LoanRepository repository) {
-        this.repository = repository;
-    }
+    private final LoanRedrawAccountRepository loanRedrawAccountRepository;
+    private final LoanTransactionRepository loanTransactionRepository;
 
     @Transactional(readOnly = true)
     public Loan findOneWithNotFoundDetection(final Long id) {
@@ -252,5 +257,38 @@ public class LoanRepositoryWrapper {
             loan.initilizeTransactions();
         }
         return loan;
+    }
+
+    public void updateRedrawAmount(Loan loan, AppUser user, Long loanId, BigDecimal transactionAmount, final boolean isDeposit,
+            LocalDate transactionDate, PaymentDetail paymentDetail) {
+        final var loanRedrawAccountOptional = loanRedrawAccountRepository.findByLoanId(loanId);
+        final Loan existingLoanApplication = findOneWithNotFoundDetection(loanId);
+        final var withdrawAmount = Money.of(loan.getCurrency(), transactionAmount);
+        var loanRedrawAccount = getOrInstantiateLoanRedrawAccount(loanRedrawAccountOptional, existingLoanApplication, user);
+        loanRedrawAccount.setRedrawBalance(isDeposit ? loanRedrawAccount.getRedrawBalance().add(transactionAmount)
+                : loanRedrawAccount.getRedrawBalance().subtract(transactionAmount));
+        final var loanTransaction = isDeposit
+                ? LoanTransaction.applyRedrawRepayment(loan.getOffice(), withdrawAmount, paymentDetail, transactionDate, null, loan)
+                : LoanTransaction.withdrawFromRedraw(loan.getOffice(), withdrawAmount, paymentDetail, transactionDate, null, loan);
+        this.loanTransactionRepository.saveAndFlush(loanTransaction);
+        loanRedrawAccountRepository.saveAndFlush(loanRedrawAccount);
+    }
+
+    private LoanRedrawAccount getOrInstantiateLoanRedrawAccount(Optional<LoanRedrawAccount> loanRedrawAccountOptional,
+            final Loan existingLoanApplication, final AppUser user) {
+        LoanRedrawAccount loanRedrawAccount;
+        if (loanRedrawAccountOptional.isPresent()) {
+            loanRedrawAccount = loanRedrawAccountOptional.get();
+            loanRedrawAccount.setLastModifiedBy(user.getId());
+            loanRedrawAccount.setLastModifiedDate(DateUtils.getLocalDateTimeOfTenant());
+        }
+
+        else {
+            loanRedrawAccount = LoanRedrawAccount.builder().loan(existingLoanApplication).redrawBalance(BigDecimal.ZERO).build();
+            loanRedrawAccount.setCreatedBy(user.getId());
+            loanRedrawAccount.setCreatedDate(DateUtils.getLocalDateTimeOfTenant());
+        }
+
+        return loanRedrawAccount;
     }
 }
