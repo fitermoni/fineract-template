@@ -499,7 +499,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
 
         try {
             final String sql = "select " + this.rdTransactionTemplateMapper.schema()
-                    + " where sa.id = ? and sa.deposit_type_enum = ? order by mss.installment limit 1";
+                    + " where (mss.completed_derived = false OR mdat.maturity_date > mss.obligations_met_on_date) and sa.id = ? and sa.deposit_type_enum = ? order by mss.installment limit 1";
             return this.jdbcTemplate.queryForObject(sql, this.rdTransactionTemplateMapper, // NOSONAR
                     new Object[] { accountId, accountId, DepositAccountType.RECURRING_DEPOSIT.getValue() });
         } catch (final EmptyResultDataAccessException e) {
@@ -1462,7 +1462,8 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
                     "mss.duedate as duedate, (mss.deposit_amount - coalesce(mss.deposit_amount_completed_derived,0)) as dueamount, ");
             sqlBuilder.append("coalesce(sac.amount_outstanding_derived,0.0) AS outstandingChargeAmount ");
             sqlBuilder.append("from m_savings_account sa ");
-            sqlBuilder.append("join m_mandatory_savings_schedule mss  on mss.savings_account_id=sa.id and mss.completed_derived = false ");
+            sqlBuilder.append("join m_mandatory_savings_schedule mss  on mss.savings_account_id=sa.id ");
+            sqlBuilder.append("join  m_deposit_account_term_and_preclosure mdat on mdat.savings_account_id = sa.id ");
             sqlBuilder.append("join m_currency curr on curr.code = sa.currency_code ");
             sqlBuilder.append("LEFT JOIN(SELECT s.savings_account_id AS savings_account_id ");
             sqlBuilder.append(",SUM(COALESCE(s.amount_outstanding_derived,0.0)) AS amount_outstanding_derived  ");
