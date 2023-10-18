@@ -513,7 +513,8 @@ public class FixedDepositAccount extends SavingsAccount {
             while (listIterator.hasPrevious()) {
                 SavingsAccountTransaction accountTransaction = listIterator.previous();
                 // Check all transactions after maturity date
-                if (accountTransaction.isBefore(closedDate)) { //Account can be closed as transaction date is before maturity date
+                if (accountTransaction.isBefore(closedDate) || accountTransaction.getDateOf().isEqual(closedDate)) {
+                    //Account can be closed as transaction date is before or same as closingDate
                     break;
                 } else if (!accountTransaction.isAccrualInterestPosting() && accountTransaction.isNotReversed()) {
                     canCloseAccount = false;
