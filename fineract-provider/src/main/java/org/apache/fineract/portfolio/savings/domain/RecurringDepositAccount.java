@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -600,9 +601,20 @@ public class RecurringDepositAccount extends SavingsAccount {
             }
         }
         final List<SavingsAccountTransaction> savingsAccountTransactions = retreiveListOfTransactions();
-        if (savingsAccountTransactions.size() > 0) {
-            final SavingsAccountTransaction accountTransaction = savingsAccountTransactions.get(savingsAccountTransactions.size() - 1);
-            if (accountTransaction.isAfter(closedDate)) {
+        if (!savingsAccountTransactions.isEmpty()) {
+            boolean canCloseAccount = true;
+            ListIterator<SavingsAccountTransaction> listIterator = savingsAccountTransactions.listIterator(savingsAccountTransactions.size());
+            while (listIterator.hasPrevious()) {
+                SavingsAccountTransaction accountTransaction = listIterator.previous();
+                // Check all transactions after maturity date
+                if (accountTransaction.isBefore(closedDate)) { //Account can be closed as transaction date is before maturity date
+                    break;
+                } else if (!accountTransaction.isAccrualInterestPosting() && accountTransaction.isNotReversed()) {
+                    canCloseAccount = false;
+                    break;
+                }
+            }
+            if (!canCloseAccount) {
                 baseDataValidator.reset().parameter(SavingsApiConstants.closedOnDateParamName).value(closedDate)
                         .failWithCode("must.be.after.last.transaction.date");
                 if (!dataValidationErrors.isEmpty()) {
