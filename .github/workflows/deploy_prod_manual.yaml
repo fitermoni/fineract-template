@@ -54,7 +54,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.event.inputs.image-tag }}
         run: |
-          cd helm-prod
+          cd helm-prod-custom
           kubectl config set-context --current --namespace=application
           helm dependency update
           helm upgrade -i backend --set fineract-rest.tag=$IMAGE_TAG .

@@ -3,9 +3,9 @@ fineract-rest:
   configFiles:
     - mountPath: "/app/resources/logback.xml"
       mountFileName: "logback.xml"
-  repository: "646245671754.dkr.ecr.us-east-1.amazonaws.com/fiter-backend-app"
+  repository: "646245671754.dkr.ecr.us-east-2.amazonaws.com/fiter-app"
   pullPolicy: IfNotPresent
-  tag: "8fc0595"
+  tag: "fineract-moniafrica-21SEP22-1630"
   env:
     TZ: "UTC"
     FINERACT_HIKARI_DRIVER_SOURCE_CLASS_NAME: "com.mysql.cj.jdbc.Driver"
@@ -35,9 +35,6 @@ fineract-rest:
     FINERACT_SERVER_SSL_ENABLED: "true"
     FINERACT_SERVER_PORT: 8443
     FF4J_FILE_NAME: "ff4j-feature-moniafrica.yml"
-
-
-  
   
   awsSecrets:
     FINERACT_HIKARI_PASSWORD: "arn:aws:secretsmanager:us-east-1:646245671754:secret:HIKARI_PASS-VTGNFz"
@@ -46,8 +43,6 @@ fineract-rest:
     FINERACT_DEFAULT_TENANTDB_HOSTNAME: "arn:aws:secretsmanager:us-east-1:646245671754:secret:FINERACT_DEFAULT_TENANTDB_HOSTNAME-41R5R5"
     FINERACT_DEFAULT_TENANTDB_UID: "arn:aws:secretsmanager:us-east-1:646245671754:secret:FINERACT_DEFAULT_TENANTDB_UID-vnt48o"
     FINERACT_HIKARI_USERNAME: "arn:aws:secretsmanager:us-east-1:646245671754:secret:FINERACT_HIKARI_USERNAME-PEBHXv"
-    
-    
   
   service:
     type: ClusterIP
@@ -96,4 +91,3 @@ fineract-rest:
   #     scheme: HTTP
   #   failureThreshold: 5
   #   periodSeconds: 60
-
