@@ -84,6 +84,9 @@ public final class DailyCompoundingPeriod implements CompoundingPeriod {
         // calculations is 'compounded'
         BigDecimal interestToCompound = interestFromPreviousPostingPeriod;
         for (final EndOfDayBalance balance : this.endOfDayBalances) {
+            if (balance.getNumberOfDays() != null && balance.getNumberOfDays() < 0) {
+                continue;
+            }
             final BigDecimal interestOnBalanceUnrounded = balance.calculateInterestOnBalanceAndInterest(interestToCompound,
                     interestRateAsFraction, daysInYear, minBalanceForInterestCalculation, overdraftInterestRateAsFraction,
                     minOverdraftForInterestCalculation);

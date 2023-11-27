@@ -119,7 +119,9 @@ public final class MonthlyCompoundingPeriod implements CompoundingPeriod {
         BigDecimal interestEarned = BigDecimal.ZERO;
         BigDecimal interestOnBalanceUnrounded = BigDecimal.ZERO;
         for (final EndOfDayBalance balance : this.endOfDayBalances) {
-
+            if (balance.getNumberOfDays() != null && balance.getNumberOfDays() < 0) {
+                continue;
+            }
             switch (compoundingInterestPeriodType) {
                 case DAILY:
                     interestOnBalanceUnrounded = balance.calculateInterestOnBalanceAndInterest(interestToCompound, interestRateAsFraction,
