@@ -75,6 +75,9 @@ public final class AnnualCompoundingPeriod implements CompoundingPeriod {
         Integer numberOfDays = Integer.valueOf(0);
 
         for (final EndOfDayBalance balance : this.endOfDayBalances) {
+            if (balance.getNumberOfDays() != null && balance.getNumberOfDays() < 0) {
+                continue;
+            }
             final BigDecimal endOfDayCumulativeBalance = balance.cumulativeBalance(interestToCompound);
             cumulativeBalance = cumulativeBalance.add(endOfDayCumulativeBalance);
 
@@ -119,7 +122,9 @@ public final class AnnualCompoundingPeriod implements CompoundingPeriod {
         BigDecimal interestEarned = BigDecimal.ZERO;
         BigDecimal interestOnBalanceUnrounded = BigDecimal.ZERO;
         for (final EndOfDayBalance balance : this.endOfDayBalances) {
-
+            if (balance.getNumberOfDays() != null && balance.getNumberOfDays() < 0) {
+                continue;
+            }
             switch (compoundingInterestPeriodType) {
                 case DAILY:
                     interestOnBalanceUnrounded = balance.calculateInterestOnBalanceAndInterest(interestToCompound, interestRateAsFraction,
