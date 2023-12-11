@@ -329,7 +329,7 @@ public class FixedDepositProductsApiResource {
         final Collection<EnumOptionData> periodFrequencyTypeOptions = this.dropdownReadPlatformService.retrievePeriodFrequencyTypeOptions();
 
         // charges
-        final boolean feeChargesOnly = true;
+        final boolean feeChargesOnly = false;
         Collection<ChargeData> chargeOptions = this.chargeReadPlatformService.retrieveSavingsProductApplicableCharges(feeChargesOnly);
         chargeOptions = CollectionUtils.isEmpty(chargeOptions) ? null : chargeOptions;
 
