@@ -183,12 +183,14 @@ public class GuarantorReadPlatformServiceImpl implements GuarantorReadPlatformSe
                     if (tempId.equals(id)) {
                         guarantorFundingData = this.guarantorFundingMapper.mapRow(rs, rowNum);
                         guarantorFundingDetails.add(guarantorFundingData);
+                        rs.previous();
                     } else {
                         rs.previous();
                         break;
                     }
 
                 }
+                rs.previous();
             }
 
             final Long genderCvId = JdbcSupport.getLong(rs, "genderCvId");
