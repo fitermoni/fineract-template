@@ -394,7 +394,12 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
                 commandProcessingResult = CommandProcessingResult.fromCommandProcessingResult(commandProcessingResult, appTableId);
             } else {
                 final Long resourceId = addMultirowRecord(sql);
-                commandProcessingResult = CommandProcessingResult.fromCommandProcessingResult(commandProcessingResult, resourceId);
+                if(this.configurationDomainService.isMakerCheckerEnabledForTask("CREATE_"+dataTableName)){
+                    commandProcessingResult = CommandProcessingResult.fromCommandProcessingResult(commandProcessingResult, appTableId);
+                }else{
+                    commandProcessingResult = CommandProcessingResult.fromCommandProcessingResult(commandProcessingResult, resourceId);
+                }
+
             }
 
             return commandProcessingResult; //
