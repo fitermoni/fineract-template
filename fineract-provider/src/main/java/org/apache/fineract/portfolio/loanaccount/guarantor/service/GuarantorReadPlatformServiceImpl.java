@@ -172,6 +172,20 @@ public class GuarantorReadPlatformServiceImpl implements GuarantorReadPlatformSe
             final String housePhoneNumber = rs.getString("housePhoneNumber");
             final String comment = rs.getString("comment");
             final boolean status = rs.getBoolean("guarantorStatus");
+
+            final Long genderCvId = JdbcSupport.getLong(rs, "genderCvId");
+            CodeValueData gender = null;
+
+            if (genderCvId != null) {
+                final String typeName = rs.getString("genderValue");
+                gender = CodeValueData.instance(genderCvId, typeName);
+            }
+
+            final boolean pep = rs.getBoolean("pep");
+            final String middlename = rs.getString("middlename");
+            final String bvn = rs.getString("bvn");
+            final String email = rs.getString("email");
+
             final Collection<PortfolioAccountData> accountLinkingOptions = null;
             List<GuarantorFundingData> guarantorFundingDetails = null;
             GuarantorFundingData guarantorFundingData = this.guarantorFundingMapper.mapRow(rs, rowNum);
@@ -193,18 +207,7 @@ public class GuarantorReadPlatformServiceImpl implements GuarantorReadPlatformSe
                 rs.previous();
             }
 
-            final Long genderCvId = JdbcSupport.getLong(rs, "genderCvId");
-            CodeValueData gender = null;
 
-            if (genderCvId != null) {
-                final String typeName = rs.getString("genderValue");
-                gender = CodeValueData.instance(genderCvId, typeName);
-            }
-
-            final boolean pep = rs.getBoolean("pep");
-            final String middlename = rs.getString("middlename");
-            final String bvn = rs.getString("bvn");
-            final String email = rs.getString("email");
 
             return new GuarantorData(id, loanId, clientRelationshipType, entityId, guarantorType, firstname, lastname, dob, addressLine1,
                     addressLine2, city, state, zip, country, mobileNumber, housePhoneNumber, comment, null, null, null, status,
