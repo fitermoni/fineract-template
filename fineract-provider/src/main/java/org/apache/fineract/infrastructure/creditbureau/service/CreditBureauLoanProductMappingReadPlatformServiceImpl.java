@@ -21,6 +21,8 @@ package org.apache.fineract.infrastructure.creditbureau.service;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.List;
+
 import org.apache.fineract.infrastructure.creditbureau.data.CreditBureauLoanProductMappingData;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +106,15 @@ public class CreditBureauLoanProductMappingReadPlatformServiceImpl implements Cr
         final CreditBureauLoanProductMapper rm = new CreditBureauLoanProductMapper();
         final String sql = "select " + rm.schema() + " and cblp.loan_product_id=?";
 
-        return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { loanProductId }); // NOSONAR
+        List<CreditBureauLoanProductMappingData> strLst = this.jdbcTemplate.query(sql, rm, new Object[] { loanProductId });
+
+        if (strLst.isEmpty()) {
+            return null;
+        } else if (strLst.size() == 1) { // list contains exactly 1 element
+            return strLst.get(0);
+        } else {
+            throw new IllegalStateException("Multiple rows returned for loanProductId: " + loanProductId);
+        }
     }
 
     @Override
