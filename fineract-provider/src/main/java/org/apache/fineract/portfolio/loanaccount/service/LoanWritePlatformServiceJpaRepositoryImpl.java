@@ -2832,19 +2832,12 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             diff = 1L;
         }
         LocalDate startDate = dueDate.plusDays(penaltyWaitPeriodValue.intValue() + 1);
-        Loan loanData = this.loanAssembler.assembleFrom(loanId);
-        LocalDate endDate = DateUtils.getBusinessLocalDate();
-        if (dueDate.isBefore(loanData.getExpectedMaturityDate())) {
-            if (chargeDefinition.feeInterval() != null) {
-                endDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency),
-                        chargeDefinition.feeInterval(), startDate);
-            }
-        }
+
         Integer frequencyNunber = 1;
         if (feeFrequency == null) {
             scheduleDates.put(frequencyNunber++, startDate.minusDays(diff));
         } else {
-            while (!startDate.isAfter(endDate) && !startDate.isEqual(endDate)) {
+            while (!startDate.isAfter(DateUtils.getBusinessLocalDate())) {
                 scheduleDates.put(frequencyNunber++, startDate.minusDays(diff));
                 LocalDate scheduleDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency),
                         chargeDefinition.feeInterval(), startDate);
