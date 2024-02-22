@@ -192,6 +192,10 @@ public class FixedDepositAccount extends SavingsAccount {
 
             final BigDecimal depositAmount = accountTermAndPreClosure.depositAmount();
             applicableInterestRate = this.chart.getApplicableInterestRate(depositAmount, depositStartDate(), depositCloseDate, this.client);
+            if(this.product.isAllowManuallyEnterInterestRate() &&
+                    BigDecimal.ZERO.compareTo(this.nominalAnnualInterestRate) != 0 && this.nominalAnnualInterestRate != null) {
+                applicableInterestRate = this.nominalAnnualInterestRate;
+            }
 
             if (applyPreMaturePenalty) {
                 applicableInterestRate = applicableInterestRate.subtract(penalInterest);
