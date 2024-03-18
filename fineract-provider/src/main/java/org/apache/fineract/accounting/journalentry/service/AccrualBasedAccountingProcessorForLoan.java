@@ -173,7 +173,7 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
      *
      */
     private void createJournalEntriesForRepaymentsAndWriteOffs(final LoanDTO loanDTO, final LoanTransactionDTO loanTransactionDTO,
-            final Office office, final boolean writeOff, final boolean isIncomeFromFee) {
+            final Office office, final boolean writeOff, boolean isIncomeFromFee) {
         // loan properties
         final Long loanProductId = loanDTO.getLoanProductId();
         final Long loanId = loanDTO.getLoanId();
@@ -189,6 +189,9 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
         final BigDecimal overPaymentAmount = loanTransactionDTO.getOverPayment();
         final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
         final boolean isReversal = loanTransactionDTO.isReversed();
+        if(loanTransactionDTO.isDisburseToSavings()){
+            isIncomeFromFee = true;
+        }
 
         BigDecimal totalDebitAmount = new BigDecimal(0);
 
