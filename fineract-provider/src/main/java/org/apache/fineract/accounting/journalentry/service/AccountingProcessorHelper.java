@@ -125,6 +125,7 @@ public class AccountingProcessorHelper {
             final BigDecimal overPayments = (BigDecimal) map.get("overPaymentPortion");
             final boolean reversed = (Boolean) map.get("reversed");
             final Long paymentTypeId = (Long) map.get("paymentTypeId");
+            boolean isDisburseToSavings = (Boolean) map.get("isDisburseToSavings");
 
             final List<ChargePaymentDTO> feePaymentDetails = new ArrayList<>();
             final List<ChargePaymentDTO> penaltyPaymentDetails = new ArrayList<>();
@@ -159,6 +160,7 @@ public class AccountingProcessorHelper {
             } else {
                 transaction.setLoanToLoanTransfer(false);
             }
+            transaction.setDisburseToSavings(isDisburseToSavings);
             newLoanTransactions.add(transaction);
 
         }
