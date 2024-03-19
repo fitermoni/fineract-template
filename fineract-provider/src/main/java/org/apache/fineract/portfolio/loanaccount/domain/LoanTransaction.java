@@ -657,6 +657,7 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom {
         thisTransactionData.put("feeChargesPortion", this.feeChargesPortion);
         thisTransactionData.put("penaltyChargesPortion", this.penaltyChargesPortion);
         thisTransactionData.put("overPaymentPortion", this.overPaymentPortion);
+        thisTransactionData.put("isDisburseToSavings", false);
 
         if (this.paymentDetail != null) {
             thisTransactionData.put("paymentTypeId", this.paymentDetail.getPaymentType().getId());
@@ -672,7 +673,11 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom {
                 loanChargePaidData.put("amount", chargePaidBy.getAmount());
 
                 loanChargesPaidData.add(loanChargePaidData);
+                if(chargePaidBy.getLoanCharge().isDisburseToSavings()){
+                    thisTransactionData.put("isDisburseToSavings", true);
+                }
             }
+
             thisTransactionData.put("loanChargesPaid", loanChargesPaidData);
         }
 
