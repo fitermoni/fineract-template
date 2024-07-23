@@ -32,7 +32,7 @@ public class ClientApiCollectionConstants extends ClientApiConstants {
             dateOfBirthParamName, genderIdParamName, clientTypeIdParamName, clientClassificationIdParamName, clientLevelIdParamName,
             clientNonPersonDetailsParamName, displaynameParamName, legalFormIdParamName, datatables, isStaffParamName, businessOwners,
             dailyWithdrawLimit, singleWithdrawLimit, maritalStatusIdParamName, titleParam, mnemonicsParamNameParam, altMobileNoParam,
-            initialsParam, isRegisteredParam, inBusinessSinceParamName));
+            initialsParam, isRegisteredParam, inBusinessSinceParamName, bvnParamName));
 
     protected static final Set<String> CLIENT_NON_PERSON_CREATE_REQUEST_DATA_PARAMETERS = new HashSet<>(
             Arrays.asList(familyMembers, address, localeParamName, dateFormatParamName, incorpNumberParamName, remarksParamName,
@@ -45,7 +45,7 @@ public class ClientApiCollectionConstants extends ClientApiConstants {
             staffIdParamName, savingsProductIdParamName, dateOfBirthParamName, genderIdParamName, clientTypeIdParamName,
             clientClassificationIdParamName, submittedOnDateParamName, clientNonPersonDetailsParamName, displaynameParamName,
             legalFormIdParamName, isStaffParamName, dailyWithdrawLimit, singleWithdrawLimit, maritalStatusIdParamName, titleParam,
-            mnemonicsParamNameParam, altMobileNoParam, initialsParam, isRegisteredParam, inBusinessSinceParamName));
+            mnemonicsParamNameParam, altMobileNoParam, initialsParam, isRegisteredParam, inBusinessSinceParamName, bvnParamName));
 
     protected static final Set<String> CLIENT_NON_PERSON_UPDATE_REQUEST_DATA_PARAMETERS = new HashSet<>(
             Arrays.asList(localeParamName, dateFormatParamName, incorpNumberParamName, remarksParamName, incorpValidityTillParamName,
