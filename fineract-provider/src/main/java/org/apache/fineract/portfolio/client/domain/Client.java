@@ -224,6 +224,9 @@ public class Client extends AbstractAuditableWithUTCDateTimeCustom {
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<ClientCollateralManagement> clientCollateralManagements = new HashSet<>();
 
+    @Column(name = "bvn", nullable = true)
+    private Long bvn;
+
     public static Client createNew(final AppUser currentUser, final Office clientOffice, final Group clientParentGroup, final Staff staff,
             final Long savingsProductId, final CodeValue gender, final CodeValue clientType, final CodeValue clientClassification,
             final Integer legalForm, final JsonCommand command) {
@@ -264,9 +267,10 @@ public class Client extends AbstractAuditableWithUTCDateTimeCustom {
             submittedOnDate = activationDate;
         }
         final Long savingsAccountId = null;
+        final Long bvn = command.longValueOfParameterNamed(ClientApiConstants.bvnParamName);
         return new Client(currentUser, status, clientOffice, clientParentGroup, accountNo, firstname, middlename, lastname, fullname,
                 activationDate, officeJoiningDate, externalId, mobileNo, emailAddress, staff, submittedOnDate, savingsProductId,
-                savingsAccountId, dataOfBirth, gender, clientType, clientClassification, legalForm, isStaff);
+                savingsAccountId, dataOfBirth, gender, clientType, clientClassification, legalForm, isStaff, bvn);
     }
 
     protected Client() {}
@@ -276,7 +280,7 @@ public class Client extends AbstractAuditableWithUTCDateTimeCustom {
             final LocalDate activationDate, final LocalDate officeJoiningDate, final String externalId, final String mobileNo,
             final String emailAddress, final Staff staff, final LocalDate submittedOnDate, final Long savingsProductId,
             final Long savingsAccountId, final LocalDate dateOfBirth, final CodeValue gender, final CodeValue clientType,
-            final CodeValue clientClassification, final Integer legalForm, final Boolean isStaff) {
+            final CodeValue clientClassification, final Integer legalForm, final Boolean isStaff, final Long bvn) {
 
         if (StringUtils.isBlank(accountNo)) {
             this.accountNumber = new RandomPasswordGenerator(19).generate();
@@ -342,6 +346,7 @@ public class Client extends AbstractAuditableWithUTCDateTimeCustom {
         this.clientType = clientType;
         this.clientClassification = clientClassification;
         this.setLegalForm(legalForm);
+        this.bvn=bvn;
 
         deriveDisplayName();
         validate();
@@ -604,6 +609,12 @@ public class Client extends AbstractAuditableWithUTCDateTimeCustom {
             actualChanges.put(ClientApiConstants.localeParamName, localeAsInput);
 
             this.submittedOnDate = command.localDateValueOfParameterNamed(ClientApiConstants.submittedOnDateParamName);
+        }
+
+        if (command.isChangeInLongParameterNamed(ClientApiConstants.bvnParamName, this.bvn)) {
+            final Long newValue = command.longValueOfParameterNamed(ClientApiConstants.bvnParamName);
+            actualChanges.put(ClientApiConstants.bvnParamName, newValue);
+            this.bvn = newValue;
         }
 
         validateUpdate();
