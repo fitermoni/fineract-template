@@ -211,6 +211,8 @@ public class ClientApiConstants {
 
     private static final String clientAdditionalInfoData = "clientAdditionalInfoData";
 
+    public static String bvnParamName = "bvn";
+
     /**
      * These parameters will match the class level parameters of {@link ClientData}. Where possible, we try to get
      * response parameters to match those of request parameters.
@@ -233,5 +235,6 @@ public class ClientApiConstants {
     protected static final Set<String> CLIENT_TRANSACTION_RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList(idParamName,
             transactionAmountParamName, paymentDetailDataParamName, reversedParamName, dateParamName, officeIdParamName,
             officeNameParamName, transactionTypeParamName, transactionCurrencyParamName, externalIdParamName, submittedOnDateParamName));
+
 
 }

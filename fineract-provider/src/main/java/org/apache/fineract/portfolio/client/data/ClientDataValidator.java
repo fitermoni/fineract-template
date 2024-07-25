@@ -239,6 +239,11 @@ public final class ClientDataValidator {
             final JsonArray address = this.fromApiJsonHelper.extractJsonArrayNamed(ClientApiConstants.address, element);
             baseDataValidator.reset().parameter(ClientApiConstants.address).value(address).notNull().jsonArrayNotEmpty();
         }
+        //bvn check
+        if (this.fromApiJsonHelper.parameterExists(ClientApiConstants.bvnParamName, element)) {
+            final Long bvn = this.fromApiJsonHelper.extractLongNamed(ClientApiConstants.bvnParamName, element);
+            baseDataValidator.reset().parameter(ClientApiConstants.bvnParamName).value(bvn).ignoreIfNull().longGreaterThanZero().notExceedingLengthOf(20);
+        }
 
         List<ApiParameterError> dataValidationErrorsForClientNonPerson = getDataValidationErrorsForCreateOnClientNonPerson(
                 element.getAsJsonObject().get(ClientApiConstants.clientNonPersonDetailsParamName));
@@ -592,6 +597,12 @@ public final class ClientDataValidator {
                     .extractIntegerSansLocaleNamed(ClientApiConstants.mainBusinessLineIdParamName, element);
             baseDataValidator.reset().parameter(ClientApiConstants.mainBusinessLineIdParamName).value(mainBusinessLineId)
                     .integerGreaterThanZero();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(ClientApiConstants.bvnParamName, element)) {
+            atLeastOneParameterPassedForUpdate = true;
+            final Long bvn = this.fromApiJsonHelper.extractLongNamed(ClientApiConstants.bvnParamName, element);
+            baseDataValidator.reset().parameter(ClientApiConstants.bvnParamName).value(bvn).ignoreIfNull().longGreaterThanZero().notExceedingLengthOf(11);
         }
 
         Map<String, Object> parameterUpdateStatusDetails = new HashMap<>();
