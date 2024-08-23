@@ -1881,6 +1881,10 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 fixedDepositApplicationReq.getSubmittedOnDate(),
                 fixedDepositApplicationReq.getSubmittedOnDate().plusDays(fixedDepositApplicationReq.getDepositPeriod()),
                 account.getClient());
+        if(account.getProduct().isAllowManuallyEnterInterestRate() &&
+                BigDecimal.ZERO.compareTo(account.getNominalAnnualInterestRate()) != 0 && account.getNominalAnnualInterestRate() != null) {
+            applicableInterestRate = account.getNominalAnnualInterestRate();
+        }
         BigDecimal interestEarnedOnNew = this.calculateInterest(topUpAmount, applicableInterestRate,
                 fixedDepositApplicationReq.getDepositPeriod(), daysInYearType.getValue());
         BigDecimal interestSum = interestEarnedOnExisting.add(interestEarnedOnNew);
