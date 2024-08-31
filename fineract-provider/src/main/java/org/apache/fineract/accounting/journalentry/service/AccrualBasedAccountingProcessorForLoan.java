@@ -189,7 +189,7 @@ public class AccrualBasedAccountingProcessorForLoan implements AccountingProcess
         final BigDecimal overPaymentAmount = loanTransactionDTO.getOverPayment();
         final Long paymentTypeId = loanTransactionDTO.getPaymentTypeId();
         final boolean isReversal = loanTransactionDTO.isReversed();
-        if(loanTransactionDTO.isDisburseToSavings()){
+        if (loanTransactionDTO.isDisburseToSavings()) {
             isIncomeFromFee = true;
         }
 

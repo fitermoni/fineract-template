@@ -756,8 +756,9 @@ public class AccountingProcessorHelper {
          **/
         if (chargePaymentDTOs.size() != 1) {
             return; // disabling this because we broke the above rule
-//            throw new PlatformDataIntegrityException("Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code",
-//                    "Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code");
+            // throw new PlatformDataIntegrityException("Recent Portfolio changes w.r.t Charges for shares have Broken
+            // the accounting code",
+            // "Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code");
         }
         ChargePaymentDTO chargePaymentDTO = chargePaymentDTOs.get(0);
         GLAccount chargeSpecificAccount = getLinkedGLAccountForSavingsCharges(savingsProductId, accountTypeToBeCredited.getValue(),
@@ -1017,8 +1018,9 @@ public class AccountingProcessorHelper {
         }
         if (totalAmount.compareTo(totalCreditedAmount) != 0) {
             return; // disabling this because we broke the above rule
-//            throw new PlatformDataIntegrityException("Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code",
-//                    "Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code");
+            // throw new PlatformDataIntegrityException("Recent Portfolio changes w.r.t Charges for shares have Broken
+            // the accounting code",
+            // "Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code");
         }
     }
 
@@ -1050,8 +1052,9 @@ public class AccountingProcessorHelper {
         }
         if (totalAmount.compareTo(totalCreditedAmount) != 0) {
             return; // disabling this because we broke the above rule
-//            throw new PlatformDataIntegrityException("Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code",
-//                    "Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code");
+            // throw new PlatformDataIntegrityException("Recent Portfolio changes w.r.t Charges for shares have Broken
+            // the accounting code",
+            // "Recent Portfolio changes w.r.t Charges for shares have Broken the accounting code");
         }
     }
 
