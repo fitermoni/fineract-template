@@ -71,8 +71,7 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
         List<TaxComponentData> taxComponentData = (List<TaxComponentData>) retrieveTaxComponentData(sql, new Object[] { id });
         if (taxComponentData != null && !taxComponentData.isEmpty()) {
             return taxComponentData.get(0);
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -88,7 +87,6 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
         String sql = "select " + this.taxGroupMapper.getSchema();
         return retrieveTaxGroupData(sql, null);
 
-
     }
 
     @Override
@@ -97,8 +95,7 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
         List<TaxGroupData> taxGroupData = (List<TaxGroupData>) retrieveTaxGroupData(sql, new Object[] { id });
         if (taxGroupData != null && !taxGroupData.isEmpty()) {
             return taxGroupData.get(0);
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -127,10 +124,10 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
     }
 
     private Collection<TaxComponentData> retrieveTaxComponentData(String sql, Object[] args) {
-        return this.jdbcTemplate.query(sql,args, new ResultSetExtractor<Collection<TaxComponentData>>() {
+        return this.jdbcTemplate.query(sql, args, new ResultSetExtractor<Collection<TaxComponentData>>() {
+
             @Override
-            public Collection<TaxComponentData> extractData(ResultSet rs) throws SQLException,
-                    DataAccessException {
+            public Collection<TaxComponentData> extractData(ResultSet rs) throws SQLException, DataAccessException {
 
                 List<TaxComponentData> list = new ArrayList<TaxComponentData>();
                 while (rs.next()) {
@@ -181,11 +178,10 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
                             final LocalDate historyEndDate = JdbcSupport.getLocalDate(rs, "historyEndDate");
                             historyData = new TaxComponentHistoryData(historyPercentage, historyStartDate, historyEndDate);
 
-
                             historyDatas.add(historyData);
                         }
-                        TaxComponentData taxData = TaxComponentData.instance(id, name, percentage, debitAccountType, debitAccountData, creditAccountType, creditAccountData,
-                                startDate, historyDatas);
+                        TaxComponentData taxData = TaxComponentData.instance(id, name, percentage, debitAccountType, debitAccountData,
+                                creditAccountType, creditAccountData, startDate, historyDatas);
                         list.add(taxData);
                     }
                 }
@@ -195,10 +191,10 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
     }
 
     private Collection<TaxGroupData> retrieveTaxGroupData(String sql, Object[] args) {
-        return this.jdbcTemplate.query(sql,args, new ResultSetExtractor<Collection<TaxGroupData>>() {
+        return this.jdbcTemplate.query(sql, args, new ResultSetExtractor<Collection<TaxGroupData>>() {
+
             @Override
-            public Collection<TaxGroupData> extractData(ResultSet rs) throws SQLException,
-                    DataAccessException {
+            public Collection<TaxGroupData> extractData(ResultSet rs) throws SQLException, DataAccessException {
 
                 List<TaxGroupData> list = new ArrayList<TaxGroupData>();
                 while (rs.next()) {

@@ -346,7 +346,7 @@ public class Client extends AbstractAuditableWithUTCDateTimeCustom {
         this.clientType = clientType;
         this.clientClassification = clientClassification;
         this.setLegalForm(legalForm);
-        this.bvn=bvn;
+        this.bvn = bvn;
 
         deriveDisplayName();
         validate();

@@ -83,8 +83,8 @@ public class WebHookProcessor implements HookProcessor {
         }
         final HashMap<String, Object> map = new ObjectMapper().readValue(payload, HashMap.class);
         String compilePayLoad = payload;
-        if(hook.getUgdTemplate() != null) {
-             compilePayLoad = compilePayLoad(hook.getUgdTemplate(), (Map<String, Object>) map.get("request"));
+        if (hook.getUgdTemplate() != null) {
+            compilePayLoad = compilePayLoad(hook.getUgdTemplate(), (Map<String, Object>) map.get("request"));
         }
 
         sendRequest(url, contentType, compilePayLoad, entityName, actionName, context, basicAuthCreds, apiKey, apiKeyValue);
