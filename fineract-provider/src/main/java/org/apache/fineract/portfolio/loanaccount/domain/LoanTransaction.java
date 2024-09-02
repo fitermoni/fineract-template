@@ -673,7 +673,7 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom {
                 loanChargePaidData.put("amount", chargePaidBy.getAmount());
 
                 loanChargesPaidData.add(loanChargePaidData);
-                if(chargePaidBy.getLoanCharge().isDisburseToSavings()){
+                if (chargePaidBy.getLoanCharge().isDisburseToSavings()) {
                     thisTransactionData.put("isDisburseToSavings", true);
                 }
             }

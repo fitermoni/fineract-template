@@ -102,6 +102,7 @@ public final class SavingsAccountSummary {
         this.totalDeposits = wrapper.calculateTotalDeposits(currency, transactions);
         this.totalWithdrawals = wrapper.calculateTotalWithdrawals(currency, transactions);
         this.totalInterestPosted = wrapper.calculateTotalInterestPosted(currency, transactions);
+        this.totalInterestEarned = wrapper.calculateTotalInterestEarned(currency, transactions);
         this.totalWithdrawalFees = wrapper.calculateTotalWithdrawalFees(currency, transactions);
         this.totalAnnualFees = wrapper.calculateTotalAnnualFees(currency, transactions);
         this.totalFeeCharge = wrapper.calculateTotalFeesCharge(currency, transactions);

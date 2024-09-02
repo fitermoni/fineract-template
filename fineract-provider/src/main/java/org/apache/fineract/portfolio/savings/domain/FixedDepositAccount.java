@@ -192,8 +192,8 @@ public class FixedDepositAccount extends SavingsAccount {
 
             final BigDecimal depositAmount = accountTermAndPreClosure.depositAmount();
             applicableInterestRate = this.chart.getApplicableInterestRate(depositAmount, depositStartDate(), depositCloseDate, this.client);
-            if(this.product.isAllowManuallyEnterInterestRate() &&
-                    BigDecimal.ZERO.compareTo(this.nominalAnnualInterestRate) != 0 && this.nominalAnnualInterestRate != null) {
+            if (this.product.isAllowManuallyEnterInterestRate() && BigDecimal.ZERO.compareTo(this.nominalAnnualInterestRate) != 0
+                    && this.nominalAnnualInterestRate != null) {
                 applicableInterestRate = this.nominalAnnualInterestRate;
             }
 
@@ -513,12 +513,13 @@ public class FixedDepositAccount extends SavingsAccount {
         final List<SavingsAccountTransaction> savingsAccountTransactions = retreiveListOfTransactions();
         if (!savingsAccountTransactions.isEmpty()) {
             boolean canCloseAccount = true;
-            ListIterator<SavingsAccountTransaction> listIterator = savingsAccountTransactions.listIterator(savingsAccountTransactions.size());
+            ListIterator<SavingsAccountTransaction> listIterator = savingsAccountTransactions
+                    .listIterator(savingsAccountTransactions.size());
             while (listIterator.hasPrevious()) {
                 SavingsAccountTransaction accountTransaction = listIterator.previous();
                 // Check all transactions after maturity date
                 if (accountTransaction.isBefore(closedDate) || accountTransaction.getDateOf().isEqual(closedDate)) {
-                    //Account can be closed as transaction date is before or same as closingDate
+                    // Account can be closed as transaction date is before or same as closingDate
                     break;
                 } else if (!accountTransaction.isAccrualInterestPosting() && accountTransaction.isNotReversed()) {
                     canCloseAccount = false;
@@ -533,7 +534,6 @@ public class FixedDepositAccount extends SavingsAccount {
                 }
             }
         }
-
 
         validateActivityNotBeforeClientOrGroupTransferDate(SavingsEvent.SAVINGS_CLOSE_ACCOUNT, closedDate);
         this.status = SavingsAccountStatusType.CLOSED.getValue();

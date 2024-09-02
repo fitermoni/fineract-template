@@ -603,12 +603,13 @@ public class RecurringDepositAccount extends SavingsAccount {
         final List<SavingsAccountTransaction> savingsAccountTransactions = retreiveListOfTransactions();
         if (!savingsAccountTransactions.isEmpty()) {
             boolean canCloseAccount = true;
-            ListIterator<SavingsAccountTransaction> listIterator = savingsAccountTransactions.listIterator(savingsAccountTransactions.size());
+            ListIterator<SavingsAccountTransaction> listIterator = savingsAccountTransactions
+                    .listIterator(savingsAccountTransactions.size());
             while (listIterator.hasPrevious()) {
                 SavingsAccountTransaction accountTransaction = listIterator.previous();
                 // Check all transactions after maturity date
                 if (accountTransaction.isBefore(closedDate) || accountTransaction.getDateOf().isEqual(closedDate)) {
-                    //Account can be closed as transaction date is before or same as closingDate
+                    // Account can be closed as transaction date is before or same as closingDate
                     break;
                 } else if (!accountTransaction.isAccrualInterestPosting() && accountTransaction.isNotReversed()) {
                     canCloseAccount = false;

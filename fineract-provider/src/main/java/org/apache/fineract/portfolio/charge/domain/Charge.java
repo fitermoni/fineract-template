@@ -871,6 +871,7 @@ public class Charge extends AbstractPersistableCustom {
     public boolean isOverdueInstallment() {
         return ChargeTimeType.fromInt(this.chargeTimeType).isOverdueInstallment();
     }
+
     public boolean isDisburseToSavings() {
         return ChargeTimeType.fromInt(this.chargeTimeType).equals(ChargeTimeType.DISBURSE_TO_SAVINGS);
     }
