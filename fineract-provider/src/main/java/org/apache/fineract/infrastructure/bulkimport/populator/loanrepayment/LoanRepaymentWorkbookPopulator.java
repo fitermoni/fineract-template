@@ -142,7 +142,7 @@ public class LoanRepaymentWorkbookPopulator extends AbstractWorkbookPopulator {
                 "INDIRECT(CONCATENATE(\"Account_\",SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($B1,\" \",\"_\"),\"(\",\"_\"),\")\",\"_\")))");
         DataValidationConstraint paymentTypeConstraint = validationHelper.createFormulaListConstraint("PaymentTypes");
         DataValidationConstraint repaymentDateConstraint = validationHelper.createDateConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "=VLOOKUP($D1,$T$2:$X$" + (allloans.size() + 1) + ",4,FALSE)", "=TODAY()",
+                DataValidationConstraint.OperatorType.BETWEEN, "01 January 2009", "=TODAY()",
                 dateFormat);
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);
@@ -283,7 +283,7 @@ public class LoanRepaymentWorkbookPopulator extends AbstractWorkbookPopulator {
         writeString(LoanRepaymentConstants.TOTAL_OUTSTANDING_AMOUNT_COL, rowHeader, "Total Outstanding Amount");
         writeString(LoanRepaymentConstants.LOAN_DISBURSEMENT_DATE_COL, rowHeader, "Loan Disbursement Date");
         writeString(LoanRepaymentConstants.AMOUNT_COL, rowHeader, "Amount Repaid*");
-        writeString(LoanRepaymentConstants.REPAID_ON_DATE_COL, rowHeader, "Date*");
+        writeString(LoanRepaymentConstants.REPAID_ON_DATE_COL, rowHeader, "Date*-(MM/DD/YYYY eg. 03/30/2024)");
         writeString(LoanRepaymentConstants.REPAYMENT_TYPE_COL, rowHeader, "Type*");
         writeString(LoanRepaymentConstants.ACCOUNT_NO_COL, rowHeader, "Account No");
         writeString(LoanRepaymentConstants.CHECK_NO_COL, rowHeader, "Check No");
