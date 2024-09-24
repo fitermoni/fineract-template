@@ -77,10 +77,18 @@ jobs:
     - name: deploy backend
       env:
         IMAGE_TAG: ${{ steps.commit.outputs.short }}
+        FINERACT_CONTENT_S3_BUCKET_NAME: ${{ secrets.FINERACT_CONTENT_S3_BUCKET_NAME_PROD }}
+        FINERACT_CONTENT_S3_REGION: ${{ secrets.FINERACT_CONTENT_S3_REGION_PROD }}
+        FINERACT_CONTENT_S3_ACCESS_KEY: ${{ secrets.FINERACT_CONTENT_S3_ACCESS_KEY_PROD }}
+        FINERACT_CONTENT_S3_SECRET_KEY: ${{ secrets.FINERACT_CONTENT_S3_SECRET_KEY_PROD }}
       run: |
-       cd helm-prod
-       kubectl config set-context --current --namespace=application
-       helm dependency update
-       helm upgrade -i backend --set fineract-rest.tag=$IMAGE_TAG .
-                 
+        cd helm
+        sed -i 's|FINERACT_CONTENT_S3_BUCKET_NAME:.*|FINERACT_CONTENT_S3_BUCKET_NAME: '"$FINERACT_CONTENT_S3_BUCKET_NAME"'|' values.yaml
+        sed -i 's|FINERACT_CONTENT_S3_REGION:.*|FINERACT_CONTENT_S3_REGION: '"$FINERACT_CONTENT_S3_REGION"'|' values.yaml
+        sed -i 's|FINERACT_CONTENT_S3_ACCESS_KEY:.*|FINERACT_CONTENT_S3_ACCESS_KEY: '"$FINERACT_CONTENT_S3_ACCESS_KEY"'|' values.yaml
+        sed -i 's|FINERACT_CONTENT_S3_SECRET_KEY:.*|FINERACT_CONTENT_S3_SECRET_KEY: '"$FINERACT_CONTENT_S3_SECRET_KEY"'|' values.yaml
+        kubectl config set-context --current --namespace=application
+        helm dependency update
+        helm upgrade -i backend --set fineract-rest.tag=$IMAGE_TAG .
+
          
