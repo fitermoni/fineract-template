@@ -20,7 +20,6 @@ package org.apache.fineract.infrastructure.bulkimport.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLConnection;
@@ -28,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
-import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 import org.apache.fineract.infrastructure.bulkimport.data.BulkImportEvent;
 import org.apache.fineract.infrastructure.bulkimport.data.GlobalEntityType;
@@ -40,7 +38,10 @@ import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
+import org.apache.fineract.infrastructure.documentmanagement.contentrepository.ContentRepository;
+import org.apache.fineract.infrastructure.documentmanagement.contentrepository.ContentRepositoryFactory;
 import org.apache.fineract.infrastructure.documentmanagement.data.DocumentData;
+import org.apache.fineract.infrastructure.documentmanagement.data.FileData;
 import org.apache.fineract.infrastructure.documentmanagement.domain.Document;
 import org.apache.fineract.infrastructure.documentmanagement.domain.DocumentRepository;
 import org.apache.fineract.infrastructure.documentmanagement.service.DocumentWritePlatformService;
@@ -67,17 +68,20 @@ public class BulkImportWorkbookServiceImpl implements BulkImportWorkbookService 
     private final DocumentRepository documentRepository;
     private final ImportDocumentRepository importDocumentRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final ContentRepositoryFactory contentRepositoryFactory;
 
     @Autowired
     public BulkImportWorkbookServiceImpl(final ApplicationContext applicationContext, final PlatformSecurityContext securityContext,
             final DocumentWritePlatformService documentWritePlatformService, final DocumentRepository documentRepository,
-            final ImportDocumentRepository importDocumentRepository, final JdbcTemplate jdbcTemplate) {
+            final ImportDocumentRepository importDocumentRepository, final JdbcTemplate jdbcTemplate,
+            ContentRepositoryFactory contentRepositoryFactory) {
         this.applicationContext = applicationContext;
         this.securityContext = securityContext;
         this.documentWritePlatformService = documentWritePlatformService;
         this.documentRepository = documentRepository;
         this.importDocumentRepository = importDocumentRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.contentRepositoryFactory = contentRepositoryFactory;
     }
 
     @Override
@@ -248,22 +252,13 @@ public class BulkImportWorkbookServiceImpl implements BulkImportWorkbookService 
     }
 
     @Override
-    public Response getOutputTemplate(String importDocumentId) {
+    public FileData getOutputTemplate(String importDocumentId) {
         this.securityContext.authenticatedUser();
         final ImportTemplateLocationMapper importTemplateLocationMapper = new ImportTemplateLocationMapper();
         final String sql = "select " + importTemplateLocationMapper.schema();
-        DocumentData documentData = this.jdbcTemplate.queryForObject(sql, importTemplateLocationMapper, new Object[] { importDocumentId }); // NOSONAR
-        return buildResponse(documentData);
-    }
-
-    private Response buildResponse(DocumentData documentData) {
-        String fileName = "Output" + documentData.fileName();
-        String fileLocation = documentData.fileLocation();
-        File file = new File(fileLocation);
-        final Response.ResponseBuilder response = Response.ok(file);
-        response.header("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-        response.header("Content-Type", "application/vnd.ms-excel");
-        return response.build();
+        DocumentData documentData = this.jdbcTemplate.queryForObject(sql, importTemplateLocationMapper, importDocumentId);
+        ContentRepository contentRepository = contentRepositoryFactory.getRepository();
+        return contentRepository.fetchFile(documentData);
     }
 
     private static final class ImportTemplateLocationMapper implements RowMapper<DocumentData> {

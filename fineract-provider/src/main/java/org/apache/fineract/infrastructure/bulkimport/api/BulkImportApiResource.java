@@ -37,7 +37,9 @@ import org.apache.fineract.infrastructure.bulkimport.service.BulkImportWorkbookS
 import org.apache.fineract.infrastructure.core.api.ApiRequestParameterHelper;
 import org.apache.fineract.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.apache.fineract.infrastructure.core.serialization.DefaultToApiJsonSerializer;
+import org.apache.fineract.infrastructure.documentmanagement.api.ContentResources;
 import org.apache.fineract.infrastructure.documentmanagement.data.DocumentData;
+import org.apache.fineract.infrastructure.documentmanagement.data.FileData;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -104,7 +106,8 @@ public class BulkImportApiResource {
     @Path("downloadOutputTemplate")
     @Produces("application/vnd.ms-excel")
     public Response getOutputTemplate(@QueryParam("importDocumentId") final String importDocumentId) {
-        return bulkImportWorkbookService.getOutputTemplate(importDocumentId);
+        FileData fileData = bulkImportWorkbookService.getOutputTemplate(importDocumentId);
+        return ContentResources.fileDataToResponse(fileData, "attachment");
     }
 
 }
