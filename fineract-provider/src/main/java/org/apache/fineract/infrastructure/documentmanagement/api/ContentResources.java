@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Michael Vorburger.ch
  */
-final class ContentResources {
+public final class ContentResources {
 
     private static final Logger LOG = LoggerFactory.getLogger(ContentResources.class);
 
@@ -55,7 +55,7 @@ final class ContentResources {
         return response.build();
     }
 
-    static Response fileDataToResponse(FileData fileData, String dispositionType) {
+    public static Response fileDataToResponse(FileData fileData, String dispositionType) {
         return fileDataToResponse(fileData, fileData.name(), dispositionType);
     }
 }
