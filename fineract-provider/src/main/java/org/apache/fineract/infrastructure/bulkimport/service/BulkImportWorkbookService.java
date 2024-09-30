@@ -20,10 +20,10 @@ package org.apache.fineract.infrastructure.bulkimport.service;
 
 import java.io.InputStream;
 import java.util.Collection;
-import javax.ws.rs.core.Response;
 import org.apache.fineract.infrastructure.bulkimport.data.GlobalEntityType;
 import org.apache.fineract.infrastructure.bulkimport.data.ImportData;
 import org.apache.fineract.infrastructure.documentmanagement.data.DocumentData;
+import org.apache.fineract.infrastructure.documentmanagement.data.FileData;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
 public interface BulkImportWorkbookService {
@@ -35,6 +35,6 @@ public interface BulkImportWorkbookService {
 
     DocumentData getOutputTemplateLocation(String importDocumentId);
 
-    Response getOutputTemplate(String importDocumentId);
+    FileData getOutputTemplate(String importDocumentId);
 
 }
