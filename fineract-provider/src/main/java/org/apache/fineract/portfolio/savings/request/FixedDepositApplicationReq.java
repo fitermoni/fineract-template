@@ -236,6 +236,7 @@ public class FixedDepositApplicationReq {
 
     public void setInterestRate(BigDecimal interestRate) {
         this.interestRate = interestRate;
+        this.setInterestRateSet(true);
     }
 
     public boolean isCalendarInherited() {

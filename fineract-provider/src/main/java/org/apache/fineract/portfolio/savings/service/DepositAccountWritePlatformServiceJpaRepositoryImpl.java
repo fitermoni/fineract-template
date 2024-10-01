@@ -1710,6 +1710,13 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
     @Override
     public CommandProcessingResult topUpAccount(Long accountId, JsonCommand command) {
         final Map<String, Object> changes = new LinkedHashMap<>();
+        final boolean isSavingsInterestPostingAtCurrentPeriodEnd = this.configurationDomainService
+                .isSavingsInterestPostingAtCurrentPeriodEnd();
+        final Integer financialYearBeginningMonth = this.configurationDomainService.retrieveFinancialYearBeginningMonth();
+
+        final MathContext mc = new MathContext(10, MoneyHelper.getRoundingMode());
+        boolean isInterestTransfer = false;
+
         final PaymentDetail paymentDetail = this.paymentDetailWritePlatformService.createAndPersistPaymentDetail(command, changes);
         this.depositAccountTransactionDataValidator.validateTopUp(command);
         FixedDepositAccount account = (FixedDepositAccount) this.depositAccountAssembler.assembleFrom(accountId,
@@ -1722,6 +1729,9 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
 
         FixedDepositApplicationReq fixedDepositApplicationReq = this.generateFixedDepositApplicationReq(account, command);
         fixedDepositApplicationReq.setDepositAmount(command.bigDecimalValueOfParameterNamed(depositAmountParamName));
+        account.postAccrualInterest(mc, fixedDepositApplicationReq.getSubmittedOnDate(), isInterestTransfer,
+                isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, fixedDepositApplicationReq.getSubmittedOnDate(),
+                account.maturityDate());
         fixedDepositApplicationReq.setInterestCarriedForward(this.calculateInterestCarriedForward(account));
         boolean changeTenure = command.booleanPrimitiveValueOfParameterNamed(changeTenureParamName);
         if (!changeTenure) {
@@ -1932,7 +1942,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         fixedDepositPreclosureReq.setClosureType(DepositAccountOnClosureType.TRANSFER_TO_SAVINGS);
         fixedDepositPreclosureReq.setLinkedSavingsAccount(accountAssociations.linkedSavingsAccount());
         fixedDepositPreclosureReq.setToSavingsAccountId(accountAssociations.linkedSavingsAccount().getId());
-        fixedDepositPreclosureReq.setTransferDescription("Partial Liquidation");
+        fixedDepositPreclosureReq.setTransferDescription(topUp ? "Top up" : "Partial Liquidation");
         fixedDepositPreclosureReq.setTopUp(topUp);
         return fixedDepositPreclosureReq;
     }
@@ -2073,6 +2083,13 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
     @Transactional
     public CommandProcessingResult partiallyLiquidateAccount(Long accountId, JsonCommand command) {
         final Map<String, Object> changes = new LinkedHashMap<>();
+        final boolean isSavingsInterestPostingAtCurrentPeriodEnd = this.configurationDomainService
+                .isSavingsInterestPostingAtCurrentPeriodEnd();
+        final Integer financialYearBeginningMonth = this.configurationDomainService.retrieveFinancialYearBeginningMonth();
+
+        final MathContext mc = new MathContext(10, MoneyHelper.getRoundingMode());
+        boolean isInterestTransfer = false;
+
         final PaymentDetail paymentDetail = this.paymentDetailWritePlatformService.createAndPersistPaymentDetail(command, changes);
         FixedDepositAccount account = (FixedDepositAccount) this.depositAccountAssembler.assembleFrom(accountId,
                 DepositAccountType.FIXED_DEPOSIT);
@@ -2087,9 +2104,14 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         this.validateForLiquidationLimit(account, currentTotalLiquidations);
         this.checkClientOrGroupActive(account);
         this.createPartialLiquidationCharge(account, currentTotalLiquidations);
-        this.preCloseAccount(command, new LinkedHashMap<>(), account, accountAssociations, false, paymentDetail);
+        this.preCloseAccount(command, new LinkedHashMap<>(), account, accountAssociations, true, paymentDetail);
         FixedDepositApplicationReq fixedDepositApplicationReq = this.generateFixedDepositApplicationReq(account, command);
         this.setDepositAmountForPartialLiquidation(fixedDepositApplicationReq, account, command);
+        account.postAccrualInterest(mc, fixedDepositApplicationReq.getSubmittedOnDate(), isInterestTransfer,
+                isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, fixedDepositApplicationReq.getSubmittedOnDate(),
+                account.maturityDate());
+        fixedDepositApplicationReq.setInterestCarriedForward(this.calculateInterestCarriedForward(account));
+        fixedDepositApplicationReq.setInterestRate(account.getNominalAnnualInterestRate());
 
         FixedDepositAccount newFD = this.autoCreateNewFD(command, account, accountAssociations, fixedDepositApplicationReq);
         newFD.getAccountTermAndPreClosure().setLinkedOriginAccountId(account.getId());
@@ -2186,7 +2208,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         BigDecimal liquidationAmount = command.bigDecimalValueOfParameterNamed(liquidationAmountParamName);
         SavingsAccountTransaction partialLiquidationChargeTrxn = account.getTransactions().stream()
                 .filter(this::isPartialLiquidationChargeTransaction).findFirst().orElse(null);
-        BigDecimal newDepositAmount = account.getAccountTermAndPreClosure().maturityAmount().subtract(liquidationAmount);
+        BigDecimal newDepositAmount = account.getAccountTermAndPreClosure().depositAmount().subtract(liquidationAmount);
         if (partialLiquidationChargeTrxn != null) {
             newDepositAmount = newDepositAmount.subtract(partialLiquidationChargeTrxn.getAmount());
         }

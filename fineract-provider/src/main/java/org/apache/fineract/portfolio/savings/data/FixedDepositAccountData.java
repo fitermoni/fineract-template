@@ -357,7 +357,7 @@ public final class FixedDepositAccountData extends DepositAccountData {
                 null, null);
     }
 
-    public static FixedDepositAccountData preClosureDetails(final Long accountId, BigDecimal maturityAmount,
+    public static FixedDepositAccountData preClosureDetails(final Long accountId, BigDecimal maturityAmount, final BigDecimal depositAmount,
             final Collection<EnumOptionData> onAccountClosureOptions, final Collection<PaymentTypeData> paymentTypeOptions,
             final Collection<SavingsAccountData> savingsAccountDatas) {
 
@@ -409,7 +409,6 @@ public final class FixedDepositAccountData extends DepositAccountData {
         final EnumOptionData maxDepositTermType = null;
         final Integer inMultiplesOfDepositTerm = null;
         final EnumOptionData inMultiplesOfDepositTermType = null;
-        final BigDecimal depositAmount = null;
         final LocalDate maturityDate = null;
         final Integer depositPeriod = null;
         final EnumOptionData depositPeriodFrequency = null;
