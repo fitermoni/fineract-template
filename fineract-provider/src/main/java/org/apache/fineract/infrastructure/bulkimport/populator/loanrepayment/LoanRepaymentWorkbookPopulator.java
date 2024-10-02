@@ -141,9 +141,8 @@ public class LoanRepaymentWorkbookPopulator extends AbstractWorkbookPopulator {
         DataValidationConstraint accountNumberConstraint = validationHelper.createFormulaListConstraint(
                 "INDIRECT(CONCATENATE(\"Account_\",SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($B1,\" \",\"_\"),\"(\",\"_\"),\")\",\"_\")))");
         DataValidationConstraint paymentTypeConstraint = validationHelper.createFormulaListConstraint("PaymentTypes");
-        DataValidationConstraint repaymentDateConstraint = validationHelper.createDateConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "01 January 2009", "=TODAY()",
-                dateFormat);
+        DataValidationConstraint repaymentDateConstraint = validationHelper
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "01 January 2009", "=TODAY()", dateFormat);
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);
         DataValidation clientValidation = validationHelper.createValidation(clientNameConstraint, clientNameRange);
