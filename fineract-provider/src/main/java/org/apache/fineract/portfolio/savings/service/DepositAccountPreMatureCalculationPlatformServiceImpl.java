@@ -96,10 +96,10 @@ public class DepositAccountPreMatureCalculationPlatformServiceImpl implements De
 
         if (depositAccountType.isFixedDeposit()) {
             final FixedDepositAccount fd = (FixedDepositAccount) account;
-            accountData = FixedDepositAccountData.preClosureDetails(
-                    account.getId(), fd.calculatePreMatureAmount(interestCalculatedToDate, isPreMatureClosure,
-                            isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth),
-                    onAccountClosureOptions, paymentTypeOptions, savingsAccountDatas);
+            accountData = FixedDepositAccountData.preClosureDetails(account.getId(),
+                    fd.calculatePreMatureAmount(interestCalculatedToDate, isPreMatureClosure, isSavingsInterestPostingAtCurrentPeriodEnd,
+                            financialYearBeginningMonth),
+                    fd.getDepositAmount(), onAccountClosureOptions, paymentTypeOptions, savingsAccountDatas);
         } else if (depositAccountType.isRecurringDeposit()) {
             final RecurringDepositAccount rd = (RecurringDepositAccount) account;
             accountData = RecurringDepositAccountData.preClosureDetails(
