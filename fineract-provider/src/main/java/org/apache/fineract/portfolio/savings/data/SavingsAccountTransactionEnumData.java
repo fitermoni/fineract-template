@@ -29,6 +29,7 @@ public class SavingsAccountTransactionEnumData implements Serializable {
     private final Long id;
     private final String code;
     private final String value;
+    private final String description;
 
     private final boolean deposit;
     private final boolean dividendPayout;
@@ -55,6 +56,7 @@ public class SavingsAccountTransactionEnumData implements Serializable {
         this.id = id;
         this.code = code;
         this.value = value;
+        this.description = value;
         this.deposit = Long.valueOf(SavingsAccountTransactionType.DEPOSIT.getValue()).equals(this.id);
         this.dividendPayout = Long.valueOf(SavingsAccountTransactionType.DIVIDEND_PAYOUT.getValue()).equals(this.id);
         this.withdrawal = Long.valueOf(SavingsAccountTransactionType.WITHDRAWAL.getValue()).equals(this.id);
@@ -198,5 +200,9 @@ public class SavingsAccountTransactionEnumData implements Serializable {
 
     public boolean isRevokedInterest() {
         return revokedInterest;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }
