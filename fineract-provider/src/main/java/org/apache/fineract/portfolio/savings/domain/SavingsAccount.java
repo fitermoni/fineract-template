@@ -4897,15 +4897,6 @@ public class SavingsAccount extends AbstractPersistableCustom {
     protected void updateSummaries(List<PostingPeriod> allPostingPeriods) {
         this.summary.updateFromInterestPeriodSummaries(this.currency, allPostingPeriods);
         updateSummary();
-        // Update total interest earned
-        if (this.summary.getTotalInterestEarned() != null && this.summary.getTotalInterestPosted() != null) {
-            this.summary.setTotalInterestEarned(this.summary.getTotalInterestEarned().add(this.summary.getTotalInterestPosted()));
-        }
-        // Update total overdraft interest earned
-        if (this.summary.getTotalOverdraftInterestEarned() != null && this.summary.getTotalOverdraftInterestDerived() != null) {
-            this.summary.setTotalOverdraftInterestEarned(
-                    this.summary.getTotalOverdraftInterestEarned().add(this.summary.getTotalOverdraftInterestDerived()));
-        }
     }
 
     public void updateSummary() {
