@@ -354,7 +354,7 @@ public class FixedDepositAccount extends SavingsAccount {
             allPostingPeriods.add(postingPeriod);
         }
 
-        if (allPostingPeriods.size() == 1 && SavingsPostingInterestPeriodType.TENURE.getValue().equals(this.interestPostingPeriodType)){
+        if (allPostingPeriods.size() == 1 && SavingsPostingInterestPeriodType.TENURE.getValue().equals(this.interestPostingPeriodType)) {
             List<CompoundingPeriod> compoundingPeriods = allPostingPeriods.get(0).getCompoundingPeriods();
             if (!compoundingPeriods.isEmpty()) {
                 CompoundingPeriod compoundingPeriod = compoundingPeriods.get(0);
@@ -363,7 +363,7 @@ public class FixedDepositAccount extends SavingsAccount {
                 allPostingPeriods.get(0).getCompoundingPeriods().clear();
                 allPostingPeriods.get(0).getCompoundingPeriods().add(compoundingPeriod);
                 if (compoundingPeriod instanceof AnnualCompoundingPeriod
-                        && !((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().isEmpty()) {
+                        && !((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().isEmpty() && isPreMatureClosure) {
                     int days = Math.toIntExact(ChronoUnit.DAYS.between(getActivationLocalDate(), DateUtils.getBusinessLocalDate()));
                     if (((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().get(0).getNumberOfDays() == days) {
                         EndOfDayBalance balance = ((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().get(0);
@@ -376,9 +376,9 @@ public class FixedDepositAccount extends SavingsAccount {
             }
         }
 
-        if(allPostingPeriods.size() == 2 && SavingsPostingInterestPeriodType.ANNUAL.getValue().equals(this.interestPostingPeriodType)) {
+        if (allPostingPeriods.size() == 2 && SavingsPostingInterestPeriodType.ANNUAL.getValue().equals(this.interestPostingPeriodType)) {
 
-            for(PostingPeriod postingPeriod : allPostingPeriods) {
+            for (PostingPeriod postingPeriod : allPostingPeriods) {
 
                 List<CompoundingPeriod> compoundingPeriods = postingPeriod.getCompoundingPeriods();
                 if (!compoundingPeriods.isEmpty()) {
@@ -388,7 +388,7 @@ public class FixedDepositAccount extends SavingsAccount {
                     postingPeriod.getCompoundingPeriods().clear();
                     postingPeriod.getCompoundingPeriods().add(compoundingPeriod);
                     if (compoundingPeriod instanceof AnnualCompoundingPeriod
-                            && !((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().isEmpty()) {
+                            && !((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().isEmpty() && isPreMatureClosure) {
                         int days = Math.toIntExact(ChronoUnit.DAYS.between(getActivationLocalDate(), DateUtils.getBusinessLocalDate()));
                         if (SavingsPostingInterestPeriodType.ANNUAL.getValue().equals(this.interestPostingPeriodType)) {
                             if (((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().get(0).getNumberOfDays() == days) {
