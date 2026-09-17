@@ -93,5 +93,6 @@
     <include file="parts/FSMA-196_create-bvn-business-tables-changelog.xml" relativeToChangelogFile="true" />
     <include file="parts/FSMA-231-add-jobname-fix-interst-posting-for-savings.xml" relativeToChangelogFile="true" />
     <include file="parts/042_add_status_to_import_document.xml" relativeToChangelogFile="true" />
+    <include file="parts/043_optimize_balance_sheet_table_report.xml" relativeToChangelogFile="true" />
     <includeAll path="custom-changelog" relativeToChangelogFile="true"/>
 </databaseChangeLog>
