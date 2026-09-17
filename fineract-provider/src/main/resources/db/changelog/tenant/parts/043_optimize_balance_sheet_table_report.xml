@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <!--
+        The original "Balance Sheet Table" report_sql (added in 0018_pentaho_reports_to_table.xml)
+        computes debit and credit totals per GL account as two separately-grouped derived tables and
+        stitches them back together with LEFT JOIN UNION RIGHT JOIN (x3, once per classification), to
+        emulate a FULL OUTER JOIN. That means every run performs 12 full aggregating scans of
+        acc_gl_journal_entry instead of 1. This rewrite computes the same net balance per account in a
+        single grouped pass using conditional SUM(), which needs no join-emulation at all.
+    -->
+
+    <changeSet author="deepika@fiter.io" id="OPTIMIZE_BALANCE_SHEET_TABLE_REPORT_MYSQL" context="mysql">
+
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM stretchy_report
+                WHERE report_name = 'Balance Sheet Table'
+            </sqlCheck>
+        </preConditions>
+
+        <update tableName="stretchy_report">
+            <column name="report_sql" value="(select acc_gl_account.gl_code as 'glcode', acc_gl_account.name as 'name', (case acc_gl_account.classification_enum when 1 then 'Assets' when 2 then 'Liability' when 3 then 'Equity' end) as 'BalanceType', (case acc_gl_account.classification_enum when 1 then sum(case when acc_gl_journal_entry.type_enum=2 then acc_gl_journal_entry.amount else 0 end) - sum(case when acc_gl_journal_entry.type_enum=1 then acc_gl_journal_entry.amount else 0 end) else sum(case when acc_gl_journal_entry.type_enum=1 then acc_gl_journal_entry.amount else 0 end) - sum(case when acc_gl_journal_entry.type_enum=2 then acc_gl_journal_entry.amount else 0 end) end) as 'balance' from acc_gl_journal_entry inner join acc_gl_account on acc_gl_account.id = acc_gl_journal_entry.account_id where acc_gl_account.classification_enum in (1,2,3) and acc_gl_journal_entry.entry_date &lt;= date('${endDate}') and (acc_gl_journal_entry.office_id=${officeId} or ${officeId}=1) group by acc_gl_account.gl_code, acc_gl_account.name, acc_gl_account.classification_enum)"/>
+            <where>report_name = 'Balance Sheet Table'</where>
+        </update>
+
+    </changeSet>
+
+    <changeSet author="deepika@fiter.io" id="OPTIMIZE_BALANCE_SHEET_TABLE_REPORT_POSTGRESQL" context="postgresql">
+
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM stretchy_report
+                WHERE report_name = 'Balance Sheet Table'
+            </sqlCheck>
+        </preConditions>
+
+        <update tableName="stretchy_report">
+            <column name="report_sql" value="( select acc_gl_account.gl_code as glcode, acc_gl_account.name as &quot;name&quot;, ( case acc_gl_account.classification_enum when 1 then 'Assets' when 2 then 'Liability' when 3 then 'Equity' end ) as &quot;BalanceType&quot;, ( case acc_gl_account.classification_enum when 1 then sum(case when acc_gl_journal_entry.type_enum = 2 then acc_gl_journal_entry.amount else 0 end) - sum(case when acc_gl_journal_entry.type_enum = 1 then acc_gl_journal_entry.amount else 0 end) else sum(case when acc_gl_journal_entry.type_enum = 1 then acc_gl_journal_entry.amount else 0 end) - sum(case when acc_gl_journal_entry.type_enum = 2 then acc_gl_journal_entry.amount else 0 end) end ) as &quot;balance&quot; from acc_gl_journal_entry inner join acc_gl_account on acc_gl_account.id = acc_gl_journal_entry.account_id where acc_gl_account.classification_enum in (1,2,3) and acc_gl_journal_entry.entry_date &lt;= '${endDate}' and ( acc_gl_journal_entry.office_id = '${officeId}' or '${officeId}' = 1 ) group by acc_gl_account.gl_code, acc_gl_account.name, acc_gl_account.classification_enum )"/>
+            <where>report_name = 'Balance Sheet Table'</where>
+        </update>
+
+    </changeSet>
+
+    <!--
+        acc_gl_journal_entry only had single-column FK indexes (account_id, office_id, ...) and none on
+        entry_date. The balance sheet (and the sibling Trial Balance / Income Statement / GL reports)
+        all filter by account_id + entry_date + type_enum and aggregate amount, so a covering composite
+        index lets the engine satisfy the whole query from the index without touching table rows.
+    -->
+    <changeSet author="deepika@fiter.io" id="ADD_INDEX_ACC_GL_JOURNAL_ENTRY_ACCOUNT_DATE_TYPE">
+
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="acc_gl_journal_entry" indexName="idx_acc_gl_journal_entry_acct_date_type"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_acc_gl_journal_entry_acct_date_type" tableName="acc_gl_journal_entry">
+            <column name="account_id"/>
+            <column name="entry_date"/>
+            <column name="type_enum"/>
+            <column name="amount"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>
